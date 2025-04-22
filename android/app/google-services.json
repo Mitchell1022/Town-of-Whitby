@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "813365817348",
+    "project_id": "gardeningapp-8a903",
+    "storage_bucket": "gardeningapp-8a903.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:813365817348:android:660f131cb1f938196cc551",
+        "android_client_info": {
+          "package_name": "com.example.town_of_whitby"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSNjFEbD-IxWwaA4mIpFt2oRXjlCV6B5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
