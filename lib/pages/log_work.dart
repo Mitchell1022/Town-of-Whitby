@@ -95,21 +95,16 @@ class _LogWorkState extends State<LogWork> {
 
     for (var image in _images) {
       try {
-        print('📸 Checking image path: ${image.path}');
         final file = File(image.path);
 
         if (!file.existsSync()) {
-          print('❌ File does not exist at this path.');
           continue;
         }
 
         final length = await file.length();
         if (length == 0) {
-          print('❌ File is 0 bytes: skipping.');
           continue;
         }
-
-        print('✅ File ready: $length bytes');
 
         final ref = storage.ref().child('log_photos/${_uuid.v4()}.jpg');
         final uploadTask = ref.putFile(file, metadata);
@@ -118,12 +113,8 @@ class _LogWorkState extends State<LogWork> {
         if (snapshot.state == TaskState.success) {
           final url = await snapshot.ref.getDownloadURL();
           downloadUrls.add(url);
-          print('✅ Upload success: $url');
-        } else {
-          print('❌ Upload failed with state: ${snapshot.state}');
-        }
+        } else {}
       } catch (e) {
-        print('❌ Image upload failed: $e');
         rethrow;
       }
     }
