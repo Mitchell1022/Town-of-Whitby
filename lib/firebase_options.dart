@@ -4,16 +4,6 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -54,7 +44,7 @@ class DefaultFirebaseOptions {
     appId: '1:813365817348:android:660f131cb1f938196cc551',
     messagingSenderId: '813365817348',
     projectId: 'gardeningapp-8a903',
-    storageBucket: 'gardeningapp-8a903.firebasestorage.app',
+    storageBucket: 'gardeningapp-8a903.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -62,8 +52,7 @@ class DefaultFirebaseOptions {
     appId: '1:813365817348:ios:c6ab679451131aec6cc551',
     messagingSenderId: '813365817348',
     projectId: 'gardeningapp-8a903',
-    storageBucket: 'gardeningapp-8a903.firebasestorage.app',
+    storageBucket: 'gardeningapp-8a903.appspot.com',
     iosBundleId: 'com.example.townOfWhitby',
   );
-
 }

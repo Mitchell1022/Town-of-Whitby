@@ -3,6 +3,7 @@ import 'package:town_of_whitby/pages/log_work.dart';
 import 'add_work_type.dart';
 import 'view_logs.dart';
 import 'add_location.dart';
+import 'reports.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -14,11 +15,14 @@ class Home extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset('assets/whitby_logo.png', height: 48),
+          // Enlarged Whitby logo
+          Image.asset('assets/whitby_logo.png', height: 72),
+
           const SizedBox(height: 16),
+          // Larger greeting text
           const Text(
             'Welcome back!',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 24),
@@ -28,7 +32,7 @@ class Home extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const LogWork()),
+                MaterialPageRoute(builder: (_) => const LogWork()),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -44,6 +48,8 @@ class Home extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+
+          // ── First row of quick actions ─────────────────────────────
           Row(
             children: [
               Expanded(
@@ -51,14 +57,11 @@ class Home extends StatelessWidget {
                   child: ListTile(
                     leading: const Icon(Icons.list),
                     title: const Text('View Logs'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ViewLogs(),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ViewLogs()),
                         ),
-                      );
-                    },
                   ),
                 ),
               ),
@@ -67,37 +70,48 @@ class Home extends StatelessWidget {
                   child: ListTile(
                     leading: const Icon(Icons.location_on),
                     title: const Text('Add Location'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddLocation(),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AddLocation(),
+                          ),
                         ),
-                      );
-                    },
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
+
+          // ── Second row of quick actions ────────────────────────────
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.45,
+              Expanded(
+                child: Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.bar_chart),
+                    title: const Text('View Reports'),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Reports()),
+                        ),
+                  ),
+                ),
+              ),
+              Expanded(
                 child: Card(
                   child: ListTile(
                     leading: const Icon(Icons.assignment_add),
                     title: const Text('Add Work Type'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddWorkType(),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AddWorkType(),
+                          ),
                         ),
-                      );
-                    },
                   ),
                 ),
               ),
