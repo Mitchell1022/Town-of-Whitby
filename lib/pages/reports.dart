@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 const _textColour = Colors.black87;

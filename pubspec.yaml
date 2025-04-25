@@ -41,6 +41,7 @@ dependencies:
   firebase_storage: ^12.4.5
   uuid: ^4.5.1
   firebase_core: ^3.13.0
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +71,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets\whitby_logo.png
+    - assets\whitby_icon_no_background.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -96,3 +98,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_icons:
+  image_path: assets/whitby_icon_no_background.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#003366"
+  adaptive_icon_foreground: assets/whitby_icon_no_background.png
