@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import '../services/database_service.dart';
+import 'add_location.dart';
+import 'add_work_type.dart';
 
 /// Whitby brand colours
 const _whitbyBlue = Color(0xFF003366);
@@ -22,18 +25,82 @@ class _LogWorkState extends State<LogWork> {
   String? _selectedLocation;
   String? _selectedWorkType;
   String? _otherWorkTypeDescription;
-  String? _workers;
+  List<String> _selectedWorkers = [];
 
   DateTime? _workDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
   final List<XFile> _images = [];
+  final _summaryController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
-  final List<String> _locations = ['Main Office', 'Civic Centre', 'Depot'];
-  final List<String> _workTypes = ['Planted', 'Weeded', 'Cleaned Up', 'Other'];
+  List<Map<String, dynamic>> _locations = [];
+  List<Map<String, dynamic>> _workTypes = [];
+  List<Map<String, dynamic>> _workers = [];
+  bool _isLoadingData = true;
   final DateFormat _dateFormatter = DateFormat('MMMM d, yyyy');
   final _uuid = const Uuid();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _summaryController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      await DatabaseService.initializeDefaultData();
+      final locations = await DatabaseService.getLocations();
+      final workTypes = await DatabaseService.getWorkTypes();
+      final workers = await DatabaseService.getWorkers();
+      
+      if (mounted) {
+        setState(() {
+          _locations = locations;
+          _workTypes = workTypes;
+          _workers = workers.where((w) => w['isActive'] == true).toList();
+          _isLoadingData = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingData = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateToAddLocation() async {
+    if (!mounted) return;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddLocation()),
+    );
+    if (result != null && mounted) {
+      _loadData();
+    }
+  }
+
+  Future<void> _navigateToAddWorkType() async {
+    if (!mounted) return;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddWorkType()),
+    );
+    if (result != null && mounted) {
+      _loadData();
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Helpers
@@ -78,6 +145,89 @@ class _LogWorkState extends State<LogWork> {
   }
 
   void _removeImage(int index) => setState(() => _images.removeAt(index));
+
+  Widget _buildWorkerPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: [
+              // Selected workers display
+              if (_selectedWorkers.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _selectedWorkers.map((workerId) {
+                      final worker = _workers.firstWhere(
+                        (w) => w['id'] == workerId,
+                        orElse: () => {'name': 'Unknown Worker'},
+                      );
+                      return Chip(
+                        label: Text(worker['name']),
+                        onDeleted: () {
+                          setState(() {
+                            _selectedWorkers.remove(workerId);
+                          });
+                        },
+                        backgroundColor: _whitbyBlue.withOpacity(0.1),
+                        deleteIconColor: _whitbyBlue,
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Divider(height: 1, color: Colors.grey[300]),
+              ],
+              
+              // Add worker button/dropdown
+              ListTile(
+                leading: Icon(Icons.add, color: _whitbyBlue),
+                title: Text(
+                  _selectedWorkers.isEmpty ? 'Select Workers' : 'Add More Workers',
+                  style: TextStyle(color: _whitbyBlue),
+                ),
+                onTap: _showWorkerPicker,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showWorkerPicker() async {
+    final availableWorkers = _workers.where((worker) {
+      return !_selectedWorkers.contains(worker['id']);
+    }).toList();
+
+    if (availableWorkers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All workers are already selected')),
+      );
+      return;
+    }
+
+    final selected = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => WorkerPickerDialog(
+        availableWorkers: availableWorkers,
+        selectedWorkers: _selectedWorkers,
+      ),
+    );
+
+    if (selected != null) {
+      setState(() {
+        _selectedWorkers = selected;
+      });
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Upload images to Firebase Storage
@@ -128,34 +278,48 @@ class _LogWorkState extends State<LogWork> {
     );
     if (confirm != true) return;
 
+    if (!mounted) return;
+    final currentContext = context;
+
     try {
       final duration = _workDuration?.inMinutes ?? 0;
       final photoUrls = await _uploadImages();
+      
+      final startTimeText = _startTime != null 
+          ? TimeOfDay(hour: _startTime!.hour, minute: _startTime!.minute).format(currentContext)
+          : null;
+      final endTimeText = _endTime != null 
+          ? TimeOfDay(hour: _endTime!.hour, minute: _endTime!.minute).format(currentContext)
+          : null;
+          
       await FirebaseFirestore.instance.collection('logs').add({
         'location': _selectedLocation,
         'workType':
             _selectedWorkType == 'Other'
                 ? _otherWorkTypeDescription
                 : _selectedWorkType,
-        'description':
-            _selectedWorkType == 'Other' ? _otherWorkTypeDescription : null,
-        'workers': _workers ?? '',
+        'summary': _summaryController.text.trim().isNotEmpty 
+            ? _summaryController.text.trim() 
+            : _selectedWorkType,
+        'description': _descriptionController.text.trim(),
+        'workers': _selectedWorkers,
         'workDate': _workDate != null ? Timestamp.fromDate(_workDate!) : null,
-        'startTime': _startTime?.format(context),
-        'endTime': _endTime?.format(context),
+        'startTime': startTimeText,
+        'endTime': endTimeText,
         'durationMinutes': duration,
         'photos': photoUrls,
         'createdAt': Timestamp.now(),
       });
 
       if (!mounted) return;
-      Navigator.popUntil(context, (route) => route.isFirst);
-      ScaffoldMessenger.of(context).showSnackBar(
+      Navigator.popUntil(currentContext, (route) => route.isFirst);
+      ScaffoldMessenger.of(currentContext).showSnackBar(
         const SnackBar(content: Text('Work log submitted successfully!')),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
-        context,
+        currentContext,
       ).showSnackBar(SnackBar(content: Text('Error saving log: $e')));
     }
   }
@@ -202,32 +366,84 @@ class _LogWorkState extends State<LogWork> {
               // ── Location & Work-type ────────────────────────────────
               const _SectionHeader(icon: Icons.place, title: 'Location & Type'),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedLocation,
-                decoration: inputDecoration('Location'),
-                items:
-                    _locations
-                        .map(
-                          (loc) =>
-                              DropdownMenuItem(value: loc, child: Text(loc)),
-                        )
-                        .toList(),
-                onChanged: (v) => setState(() => _selectedLocation = v),
-              ),
+              _isLoadingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: _selectedLocation,
+                          decoration: inputDecoration('Location'),
+                          items: [
+                            ..._locations.map(
+                              (loc) => DropdownMenuItem(
+                                value: loc['name'],
+                                child: Text(loc['name']),
+                              ),
+                            ),
+                            const DropdownMenuItem(
+                              value: '__add_new__',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.add, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Add New Location'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) {
+                            if (v == '__add_new__') {
+                              _navigateToAddLocation();
+                            } else {
+                              setState(() => _selectedLocation = v);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedWorkType,
-                decoration: inputDecoration('Work Type'),
-                items:
-                    _workTypes
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                onChanged:
-                    (v) => setState(() {
-                      _selectedWorkType = v;
-                      if (v != 'Other') _otherWorkTypeDescription = null;
-                    }),
-              ),
+              _isLoadingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: _selectedWorkType,
+                          decoration: inputDecoration('Work Type'),
+                          items: [
+                            ..._workTypes.map(
+                              (workType) => DropdownMenuItem(
+                                value: workType['name'],
+                                child: Text(workType['name']),
+                              ),
+                            ),
+                            const DropdownMenuItem(
+                              value: 'Other',
+                              child: Text('Other'),
+                            ),
+                            const DropdownMenuItem(
+                              value: '__add_new__',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.add, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Add New Work Type'),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) {
+                            if (v == '__add_new__') {
+                              _navigateToAddWorkType();
+                            } else {
+                              setState(() {
+                                _selectedWorkType = v;
+                                if (v != 'Other') _otherWorkTypeDescription = null;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
               if (_selectedWorkType == 'Other') ...[
                 const SizedBox(height: 16),
                 TextFormField(
@@ -286,9 +502,29 @@ class _LogWorkState extends State<LogWork> {
               const SizedBox(height: 24),
               const _SectionHeader(icon: Icons.groups, title: 'Workers'),
               const SizedBox(height: 8),
+              _buildWorkerPicker(),
+
+              // ── Work Details ──────────────────────────────────────
+              const SizedBox(height: 24),
+              const _SectionHeader(icon: Icons.description, title: 'Work Details'),
+              const SizedBox(height: 8),
               TextFormField(
-                decoration: inputDecoration('Workers (comma separated)'),
-                onChanged: (v) => _workers = v,
+                controller: _summaryController,
+                decoration: inputDecoration('Work Summary *').copyWith(
+                  hintText: 'Brief description of work completed',
+                ),
+                maxLength: 100,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: inputDecoration('Additional Details (Optional)').copyWith(
+                  hintText: 'Detailed description, notes, or observations',
+                ),
+                maxLines: 3,
+                maxLength: 500,
+                textCapitalization: TextCapitalization.sentences,
               ),
 
               // ── Photos ────────────────────────────────────────────
@@ -415,6 +651,88 @@ class _SectionHeader extends StatelessWidget {
           ),
         ),
         const Expanded(child: Divider(thickness: 1, indent: 12)),
+      ],
+    );
+  }
+}
+
+class WorkerPickerDialog extends StatefulWidget {
+  final List<Map<String, dynamic>> availableWorkers;
+  final List<String> selectedWorkers;
+
+  const WorkerPickerDialog({
+    super.key,
+    required this.availableWorkers,
+    required this.selectedWorkers,
+  });
+
+  @override
+  State<WorkerPickerDialog> createState() => _WorkerPickerDialogState();
+}
+
+class _WorkerPickerDialogState extends State<WorkerPickerDialog> {
+  late List<String> _tempSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempSelected = List.from(widget.selectedWorkers);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Select Workers'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.availableWorkers.isEmpty)
+              const Text('No workers available to select')
+            else
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.availableWorkers.length,
+                  itemBuilder: (context, index) {
+                    final worker = widget.availableWorkers[index];
+                    final workerId = worker['id'] as String;
+                    final isSelected = _tempSelected.contains(workerId);
+
+                    return CheckboxListTile(
+                      title: Text(worker['name'] ?? 'Unknown'),
+                      subtitle: worker['role']?.toString().isNotEmpty == true
+                          ? Text(worker['role'])
+                          : null,
+                      value: isSelected,
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            _tempSelected.add(workerId);
+                          } else {
+                            _tempSelected.remove(workerId);
+                          }
+                        });
+                      },
+                      activeColor: _whitbyBlue,
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _tempSelected),
+          style: ElevatedButton.styleFrom(backgroundColor: _whitbyBlue),
+          child: const Text('Done', style: TextStyle(color: Colors.white)),
+        ),
       ],
     );
   }

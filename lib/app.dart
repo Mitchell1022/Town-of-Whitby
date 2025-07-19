@@ -4,6 +4,8 @@ import 'pages/view_logs.dart';
 import 'pages/settings.dart';
 import 'pages/add_location.dart';
 import 'pages/add_work_type.dart';
+import 'pages/add_worker.dart';
+import 'pages/location_status.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -13,22 +15,65 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Town of Whitby',
       theme: ThemeData(
-        primaryColor: const Color(0xFF003366),
-        scaffoldBackgroundColor: Colors.white,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF003366),
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: const Color(0xFF003366),
+          secondary: const Color(0xFF0066CC),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF003366),
           elevation: 0,
+          centerTitle: false,
           iconTheme: IconThemeData(color: Colors.white),
           titleTextStyle: TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
         ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(fontSize: 16, color: Colors.black87),
+        cardTheme: CardTheme(
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black54),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            elevation: 2,
+            shadowColor: const Color(0xFF003366).withOpacity(0.3),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF003366), width: 2),
+          ),
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
+          bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
+          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF003366)),
+          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF003366)),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF003366)),
       ),
       home: const MainNavigation(),
     );
@@ -48,12 +93,6 @@ class _MainNavigationState extends State<MainNavigation> {
   bool _isDrawerOpen = false;
 
   final List<Widget> _pages = [const Home(), const ViewLogs()];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   void _toggleDrawer() {
     if (_isDrawerOpen) {
@@ -82,16 +121,10 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
           ],
         ),
-        leading:
-            Navigator.canPop(context)
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop(),
-                )
-                : IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: _toggleDrawer,
-                ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: _toggleDrawer,
+        ),
       ),
       onDrawerChanged: (isOpened) {
         setState(() {
@@ -143,6 +176,28 @@ class _MainNavigationState extends State<MainNavigation> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Add Worker'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddWorker()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.analytics),
+              title: const Text('Location Status'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LocationStatus()),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
@@ -157,6 +212,25 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
       ),
       body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF003366),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'View Logs',
+          ),
+        ],
+      ),
     );
   }
 }

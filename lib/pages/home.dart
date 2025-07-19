@@ -10,114 +10,218 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Enlarged Whitby logo
-          Image.asset('assets/whitby_logo.png', height: 72),
-
-          const SizedBox(height: 16),
-          // Larger greeting text
-          const Text(
-            'Welcome back!',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.work),
-            label: const Text('Add Work Entry'),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LogWork()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(50),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF8F9FA),
+            Colors.white,
+          ],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section with Logo and Welcome
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Image.asset('assets/whitby_logo.png', height: 80),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Work Log Portal',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF003366),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Track your daily work activities',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 24),
-          const Text(
-            'Quick Actions',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 24),
 
-          // ── First row of quick actions ─────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.list),
-                    title: const Text('View Logs'),
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ViewLogs()),
-                        ),
+            // Primary Action Button
+            Container(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add_circle, size: 24),
+                label: const Text(
+                  'Log New Work Entry',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LogWork()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF003366),
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shadowColor: const Color(0xFF003366).withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
-              Expanded(
-                child: Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.location_on),
-                    title: const Text('Add Location'),
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AddLocation(),
-                          ),
-                        ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Quick Actions Section
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF003366),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Quick Actions Grid
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
+                _buildQuickActionCard(
+                  context,
+                  icon: Icons.list_alt,
+                  title: 'View Logs',
+                  subtitle: 'Browse all entries',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ViewLogs()),
                   ),
                 ),
+                _buildQuickActionCard(
+                  context,
+                  icon: Icons.assessment,
+                  title: 'Reports',
+                  subtitle: 'View analytics',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const Reports()),
+                  ),
+                ),
+                _buildQuickActionCard(
+                  context,
+                  icon: Icons.location_on,
+                  title: 'Add Location',
+                  subtitle: 'New work site',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddLocation()),
+                  ),
+                ),
+                _buildQuickActionCard(
+                  context,
+                  icon: Icons.category,
+                  title: 'Work Types',
+                  subtitle: 'Manage categories',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddWorkType()),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF003366).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 28,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF003366),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
-          const SizedBox(height: 8),
-
-          // ── Second row of quick actions ────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.bar_chart),
-                    title: const Text('View Reports'),
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const Reports()),
-                        ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.assignment_add),
-                    title: const Text('Add Work Type'),
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AddWorkType(),
-                          ),
-                        ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
