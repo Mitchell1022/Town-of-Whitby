@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -24,13 +26,13 @@ class _ReportsState extends State<Reports> {
     super.initState();
     _loadReport();
   }
-  
+
   void _loadReport() {
     setState(() {
       _reportFuture = _generateReport();
     });
   }
-  
+
   Future<void> _pickDateRange() async {
     final picked = await showDateRangePicker(
       context: context,
@@ -47,23 +49,31 @@ class _ReportsState extends State<Reports> {
   }
 
   Future<_ReportData> _generateReport() async {
-    var query = FirebaseFirestore.instance.collection('logs') as Query<Map<String, dynamic>>;
-    
+    var query =
+        FirebaseFirestore.instance.collection('logs')
+            as Query<Map<String, dynamic>>;
+
     if (_dateRange != null) {
       query = query
-          .where('workDate', isGreaterThanOrEqualTo: Timestamp.fromDate(_dateRange!.start))
-          .where('workDate', isLessThanOrEqualTo: Timestamp.fromDate(_dateRange!.end));
+          .where(
+            'workDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(_dateRange!.start),
+          )
+          .where(
+            'workDate',
+            isLessThanOrEqualTo: Timestamp.fromDate(_dateRange!.end),
+          );
     }
-    
+
     // Load workers data for name mapping
     final workers = await DatabaseService.getWorkers();
     final workerMap = <String, String>{};
     for (final worker in workers) {
       workerMap[worker['id']] = worker['name'];
     }
-    
+
     final logsSnap = await query.get();
-    
+
     final Map<String, double> hoursByLocation = {};
     final Map<String, int> workTypeCount = {};
     final Map<String, int> entriesByLocation = {};
@@ -74,11 +84,11 @@ class _ReportsState extends State<Reports> {
     final Map<String, double> hoursByWorker = {};
     final Map<String, Map<String, double>> workerHoursByLocation = {};
     final List<Map<String, dynamic>> recentActivity = [];
-    
+
     double totalHours = 0;
     int totalEntries = 0;
     int withPhotos = 0;
-    
+
     for (var doc in logsSnap.docs) {
       final data = doc.data();
       final loc = (data['location'] ?? 'Unknown') as String;
@@ -87,18 +97,18 @@ class _ReportsState extends State<Reports> {
       final workers = data['workers'] ?? [];
       final photos = (data['photos'] ?? []) as List;
       final date = (data['workDate'] as Timestamp?)?.toDate();
-      
+
       final hours = mins / 60;
-      
+
       // Basic stats
       hoursByLocation.update(loc, (v) => v + hours, ifAbsent: () => hours);
       workTypeCount.update(workType, (v) => v + 1, ifAbsent: () => 1);
       entriesByLocation.update(loc, (v) => v + 1, ifAbsent: () => 1);
       totalHours += hours;
       totalEntries++;
-      
+
       if (photos.isNotEmpty) withPhotos++;
-      
+
       // Workers by location and hours tracking
       if (workers is List && workers.isNotEmpty) {
         if (!workersByLocation.containsKey(loc)) {
@@ -110,14 +120,25 @@ class _ReportsState extends State<Reports> {
           final workerName = workerMap[workerId] ?? 'Unknown Worker';
           workersByLocation[loc]!.add(workerId);
           workersNamesByLocation[loc]![workerId] = workerName;
-          
+
           // Track hours per worker
-          hoursByWorker.update(workerName, (v) => v + hours, ifAbsent: () => hours);
-          workerHoursByLocation[loc]!.update(workerName, (v) => v + hours, ifAbsent: () => hours);
+          hoursByWorker.update(
+            workerName,
+            (v) => v + hours,
+            ifAbsent: () => hours,
+          );
+          workerHoursByLocation[loc]!.update(
+            workerName,
+            (v) => v + hours,
+            ifAbsent: () => hours,
+          );
         }
       } else if (workers is String && workers.isNotEmpty) {
         // Handle legacy comma-separated format
-        final workerList = workers.split(',').map((w) => w.trim()).where((w) => w.isNotEmpty);
+        final workerList = workers
+            .split(',')
+            .map((w) => w.trim())
+            .where((w) => w.isNotEmpty);
         if (!workersByLocation.containsKey(loc)) {
           workersByLocation[loc] = <String>{};
           workersNamesByLocation[loc] = <String, String>{};
@@ -126,13 +147,21 @@ class _ReportsState extends State<Reports> {
         for (final workerName in workerList) {
           workersByLocation[loc]!.add(workerName);
           workersNamesByLocation[loc]![workerName] = workerName;
-          
+
           // Track hours per worker
-          hoursByWorker.update(workerName, (v) => v + hours, ifAbsent: () => hours);
-          workerHoursByLocation[loc]!.update(workerName, (v) => v + hours, ifAbsent: () => hours);
+          hoursByWorker.update(
+            workerName,
+            (v) => v + hours,
+            ifAbsent: () => hours,
+          );
+          workerHoursByLocation[loc]!.update(
+            workerName,
+            (v) => v + hours,
+            ifAbsent: () => hours,
+          );
         }
       }
-      
+
       // Recent activity with enhanced details
       if (recentActivity.length < 10) {
         // Get worker names for this entry
@@ -142,9 +171,14 @@ class _ReportsState extends State<Reports> {
             entryWorkerNames.add(workerMap[workerId] ?? 'Unknown Worker');
           }
         } else if (workers is String && workers.isNotEmpty) {
-          entryWorkerNames = workers.split(',').map((w) => w.trim()).where((w) => w.isNotEmpty).toList();
+          entryWorkerNames =
+              workers
+                  .split(',')
+                  .map((w) => w.trim())
+                  .where((w) => w.isNotEmpty)
+                  .toList();
         }
-        
+
         recentActivity.add({
           'workType': workType,
           'location': loc,
@@ -156,7 +190,7 @@ class _ReportsState extends State<Reports> {
           'id': doc.id,
         });
       }
-      
+
       // Daily hours for trends
       if (date != null) {
         final dayKey = DateFormat('yyyy-MM-dd').format(date);
@@ -166,14 +200,14 @@ class _ReportsState extends State<Reports> {
         dailyHours[dayKey]!.add(mins);
       }
     }
-    
+
     // Calculate efficiency (hours per entry) by location
     for (final loc in hoursByLocation.keys) {
       final hours = hoursByLocation[loc]!;
       final entries = entriesByLocation[loc] ?? 1;
       efficiencyByLocation[loc] = hours / entries;
     }
-    
+
     return _ReportData(
       hoursByLocation: hoursByLocation,
       workTypeCount: workTypeCount,
@@ -221,7 +255,10 @@ class _ReportsState extends State<Reports> {
                   const SizedBox(width: 8),
                   Text(
                     'Filtered: ${_dateFmt.format(_dateRange!.start)} - ${_dateFmt.format(_dateRange!.end)}',
-                    style: TextStyle(color: _whitbyBlue, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: _whitbyBlue,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const Spacer(),
                   TextButton.icon(
@@ -237,7 +274,7 @@ class _ReportsState extends State<Reports> {
                 ],
               ),
             ),
-            
+
           // Tab navigation
           Container(
             color: Colors.white,
@@ -245,11 +282,15 @@ class _ReportsState extends State<Reports> {
               children: [
                 _buildTabButton('overview', 'Overview', Icons.dashboard),
                 _buildTabButton('locations', 'Locations', Icons.place),
-                _buildTabButton('productivity', 'Productivity', Icons.trending_up),
+                _buildTabButton(
+                  'productivity',
+                  'Productivity',
+                  Icons.trending_up,
+                ),
               ],
             ),
           ),
-          
+
           Expanded(
             child: FutureBuilder<_ReportData>(
               future: _reportFuture,
@@ -261,12 +302,13 @@ class _ReportsState extends State<Reports> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 final report = snapshot.data!;
-                
+
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
-                  child: _selectedTab == 'overview' 
-                      ? _buildOverviewTab(report)
-                      : _selectedTab == 'locations'
+                  child:
+                      _selectedTab == 'overview'
+                          ? _buildOverviewTab(report)
+                          : _selectedTab == 'locations'
                           ? _buildLocationsTab(report)
                           : _buildProductivityTab(report),
                 );
@@ -277,7 +319,7 @@ class _ReportsState extends State<Reports> {
       ),
     );
   }
-  
+
   Widget _buildTabButton(String tabId, String label, IconData icon) {
     final isSelected = _selectedTab == tabId;
     return Expanded(
@@ -323,76 +365,116 @@ class _ReportsState extends State<Reports> {
         // Key metrics cards
         Row(
           children: [
-            Expanded(child: _metricCard('Total Hours', '${report.totalHours.toStringAsFixed(1)}h', Icons.access_time, _whitbyBlue)),
+            Expanded(
+              child: _metricCard(
+                'Total Hours',
+                '${report.totalHours.toStringAsFixed(1)}h',
+                Icons.access_time,
+                _whitbyBlue,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _metricCard('Total Entries', report.logCount.toString(), Icons.assignment, Colors.green[600]!)),
+            Expanded(
+              child: _metricCard(
+                'Total Entries',
+                report.logCount.toString(),
+                Icons.assignment,
+                Colors.green[600]!,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _metricCard('Locations Active', report.hoursByLocation.length.toString(), Icons.place, Colors.orange[600]!)),
+            Expanded(
+              child: _metricCard(
+                'Locations Active',
+                report.hoursByLocation.length.toString(),
+                Icons.place,
+                Colors.orange[600]!,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _metricCard('With Photos', '${((report.entriesWithPhotos / report.logCount) * 100).toStringAsFixed(0)}%', Icons.camera_alt, Colors.purple[600]!)),
+            Expanded(
+              child: _metricCard(
+                'With Photos',
+                '${((report.entriesWithPhotos / report.logCount) * 100).toStringAsFixed(0)}%',
+                Icons.camera_alt,
+                Colors.purple[600]!,
+              ),
+            ),
           ],
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Top work types
         _sectionHeader('Work Type Breakdown'),
         const SizedBox(height: 12),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              children: (report.workTypeCount.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value)))
-                  .take(5)
-                  .map((entry) => _progressBar(
-                    entry.key,
-                    entry.value,
-                    report.workTypeCount.values.reduce((a, b) => a > b ? a : b),
-                    Icons.work_outline,
-                  ))
-                  .toList(),
+              children:
+                  (report.workTypeCount.entries.toList()
+                        ..sort((a, b) => b.value.compareTo(a.value)))
+                      .take(5)
+                      .map(
+                        (entry) => _progressBar(
+                          entry.key,
+                          entry.value,
+                          report.workTypeCount.values.reduce(
+                            (a, b) => a > b ? a : b,
+                          ),
+                          Icons.work_outline,
+                        ),
+                      )
+                      .toList(),
             ),
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Recent activity
         _sectionHeader('Recent Work Entries'),
         const SizedBox(height: 12),
-        ...report.recentActivity.map((activity) => _buildEnhancedActivityCard(activity)),
+        ...report.recentActivity.map(
+          (activity) => _buildEnhancedActivityCard(activity),
+        ),
       ],
     );
   }
 
   Widget _buildLocationsTab(_ReportData report) {
-    final sortedLocations = report.hoursByLocation.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-      
+    final sortedLocations =
+        report.hoursByLocation.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionHeader('Location Performance'),
         const SizedBox(height: 16),
-        
+
         ...sortedLocations.map((entry) {
           final location = entry.key;
           final hours = entry.value;
           final entries = report.entriesByLocation[location] ?? 0;
           final workers = report.workersByLocation[location]?.length ?? 0;
           final efficiency = report.efficiencyByLocation[location] ?? 0;
-          
+
           return Card(
             elevation: 2,
             margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -423,7 +505,10 @@ class _ReportsState extends State<Reports> {
                             ),
                             Text(
                               '$entries entries • $workers workers',
-                              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -438,25 +523,38 @@ class _ReportsState extends State<Reports> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   Row(
                     children: [
                       Expanded(
-                        child: _miniMetric('Hours/Entry', efficiency.toStringAsFixed(1), Icons.speed),
+                        child: _miniMetric(
+                          'Hours/Entry',
+                          efficiency.toStringAsFixed(1),
+                          Icons.speed,
+                        ),
                       ),
                       Expanded(
-                        child: _miniMetric('Share', '${((hours / report.totalHours) * 100).toStringAsFixed(0)}%', Icons.pie_chart),
+                        child: _miniMetric(
+                          'Share',
+                          '${((hours / report.totalHours) * 100).toStringAsFixed(0)}%',
+                          Icons.pie_chart,
+                        ),
                       ),
                       Expanded(
-                        child: _miniMetric('Workers', workers.toString(), Icons.people),
+                        child: _miniMetric(
+                          'Workers',
+                          workers.toString(),
+                          Icons.people,
+                        ),
                       ),
                     ],
                   ),
-                  
+
                   // Show worker names
-                  if (report.workersNamesByLocation[location]?.isNotEmpty == true) ...[
+                  if (report.workersNamesByLocation[location]?.isNotEmpty ==
+                      true) ...[
                     const SizedBox(height: 16),
                     Text(
                       'Workers:',
@@ -470,24 +568,32 @@ class _ReportsState extends State<Reports> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 4,
-                      children: report.workersNamesByLocation[location]!.values.map((workerName) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                          ),
-                          child: Text(
+                      children:
+                          report.workersNamesByLocation[location]!.values.map((
                             workerName,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                          ) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.blue.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                workerName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ],
                 ],
@@ -500,65 +606,101 @@ class _ReportsState extends State<Reports> {
   }
 
   Widget _buildProductivityTab(_ReportData report) {
-    final avgHoursPerEntry = report.logCount > 0 ? report.totalHours / report.logCount : 0;
-    final photoRate = report.logCount > 0 ? (report.entriesWithPhotos / report.logCount) * 100 : 0;
-    
+    final avgHoursPerEntry =
+        report.logCount > 0 ? report.totalHours / report.logCount : 0;
+    final photoRate =
+        report.logCount > 0
+            ? (report.entriesWithPhotos / report.logCount) * 100
+            : 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionHeader('Productivity Metrics'),
         const SizedBox(height: 16),
-        
+
         // Overview cards
         Row(
           children: [
-            Expanded(child: _metricCard('Avg Hours/Entry', avgHoursPerEntry.toStringAsFixed(2), Icons.trending_up, Colors.blue[600]!)),
+            Expanded(
+              child: _metricCard(
+                'Avg Hours/Entry',
+                avgHoursPerEntry.toStringAsFixed(2),
+                Icons.trending_up,
+                Colors.blue[600]!,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _metricCard('Photo Coverage', '${photoRate.toStringAsFixed(0)}%', Icons.camera_alt, Colors.green[600]!)),
+            Expanded(
+              child: _metricCard(
+                'Photo Coverage',
+                '${photoRate.toStringAsFixed(0)}%',
+                Icons.camera_alt,
+                Colors.green[600]!,
+              ),
+            ),
           ],
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Efficiency by location (average minutes per entry)
         _sectionHeader('Average Time Per Entry'),
         const SizedBox(height: 12),
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
-              children: (report.efficiencyByLocation.entries.toList()
-                  ..sort((a, b) => a.value.compareTo(b.value))) // Sort by least time first (most efficient)
-                  .map((entry) => _progressBar(
-                    entry.key,
-                    entry.value * 60, // Convert to minutes for display
-                    report.efficiencyByLocation.values.reduce((a, b) => a > b ? a : b) * 60,
-                    Icons.timer,
-                    suffix: ' min/entry',
-                  ))
-                  .toList(),
+              children:
+                  (report.efficiencyByLocation.entries.toList()..sort(
+                        (a, b) => a.value.compareTo(b.value),
+                      )) // Sort by least time first (most efficient)
+                      .map(
+                        (entry) => _progressBar(
+                          entry.key,
+                          entry.value * 60, // Convert to minutes for display
+                          report.efficiencyByLocation.values.reduce(
+                                (a, b) => a > b ? a : b,
+                              ) *
+                              60,
+                          Icons.timer,
+                          suffix: ' min/entry',
+                        ),
+                      )
+                      .toList(),
             ),
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Worker Hours Summary
         if (report.hoursByWorker.isNotEmpty) ...[
           _sectionHeader('Worker Performance'),
           const SizedBox(height: 12),
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: (report.hoursByWorker.entries.toList()
-                    ..sort((a, b) => b.value.compareTo(a.value)))
-                    .map((entry) => _buildWorkerHoursRow(entry.key, entry.value, report))
-                    .toList(),
+                children:
+                    (report.hoursByWorker.entries.toList()
+                          ..sort((a, b) => b.value.compareTo(a.value)))
+                        .map(
+                          (entry) => _buildWorkerHoursRow(
+                            entry.key,
+                            entry.value,
+                            report,
+                          ),
+                        )
+                        .toList(),
               ),
             ),
           ),
@@ -572,7 +714,7 @@ class _ReportsState extends State<Reports> {
     final hours = activity['hours'] as double? ?? 0.0;
     final photos = activity['photos'] as int? ?? 0;
     final description = activity['description'] as String? ?? '';
-    
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 12),
@@ -599,7 +741,9 @@ class _ReportsState extends State<Reports> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        activity['summary'] ?? activity['workType'] ?? 'Unknown Work Type',
+                        activity['summary'] ??
+                            activity['workType'] ??
+                            'Unknown Work Type',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -608,10 +752,7 @@ class _ReportsState extends State<Reports> {
                       ),
                       Text(
                         activity['location'] ?? 'Unknown Location',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                     ],
                   ),
@@ -620,7 +761,10 @@ class _ReportsState extends State<Reports> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _whitbyBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -637,18 +781,15 @@ class _ReportsState extends State<Reports> {
                     if (activity['date'] != null)
                       Text(
                         DateFormat.MMMd().format(activity['date']),
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 11),
                       ),
                   ],
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Worker details
             if (workers.isNotEmpty) ...[
               Row(
@@ -669,35 +810,45 @@ class _ReportsState extends State<Reports> {
               Wrap(
                 spacing: 6,
                 runSpacing: 4,
-                children: workers.map((worker) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.person, size: 12, color: Colors.green[700]),
-                        const SizedBox(width: 3),
-                        Text(
-                          worker,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.green[700],
-                            fontWeight: FontWeight.w500,
+                children:
+                    workers.map((worker) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.green.withOpacity(0.3),
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.person,
+                              size: 12,
+                              color: Colors.green[700],
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              worker,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
               ),
               const SizedBox(height: 8),
             ],
-            
+
             // Additional details row
             Row(
               children: [
@@ -706,10 +857,7 @@ class _ReportsState extends State<Reports> {
                   const SizedBox(width: 4),
                   Text(
                     '$photos photo${photos == 1 ? '' : 's'}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                   const SizedBox(width: 16),
                 ],
@@ -719,10 +867,7 @@ class _ReportsState extends State<Reports> {
                   Expanded(
                     child: Text(
                       description,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -736,7 +881,11 @@ class _ReportsState extends State<Reports> {
     );
   }
 
-  Widget _buildWorkerHoursRow(String workerName, double hours, _ReportData report) {
+  Widget _buildWorkerHoursRow(
+    String workerName,
+    double hours,
+    _ReportData report,
+  ) {
     // Find locations where this worker has worked
     final workerLocations = <String>[];
     for (final entry in report.workerHoursByLocation.entries) {
@@ -744,7 +893,7 @@ class _ReportsState extends State<Reports> {
         workerLocations.add(entry.key);
       }
     }
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -772,10 +921,7 @@ class _ReportsState extends State<Reports> {
                 ),
                 Text(
                   '${workerLocations.length} location${workerLocations.length == 1 ? '' : 's'}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
@@ -785,24 +931,30 @@ class _ReportsState extends State<Reports> {
             child: Wrap(
               spacing: 4,
               runSpacing: 4,
-              children: workerLocations.take(3).map((location) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    location,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.orange[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
+              children:
+                  workerLocations.take(3).map((location) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        location,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.orange[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           Container(
@@ -887,20 +1039,20 @@ class _ReportsState extends State<Reports> {
             fontSize: 16,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
       ],
     );
   }
 
-  Widget _progressBar(String label, num value, num max, IconData icon, {String suffix = ''}) {
+  Widget _progressBar(
+    String label,
+    num value,
+    num max,
+    IconData icon, {
+    String suffix = '',
+  }) {
     final percentage = max > 0 ? (value / max) : 0.0;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(

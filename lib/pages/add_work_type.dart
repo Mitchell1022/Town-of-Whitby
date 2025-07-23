@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_button.dart';
@@ -35,18 +37,18 @@ class _AddWorkTypeState extends State<AddWorkType> {
       });
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Work type added successfully!'),
           backgroundColor: Color(0xFF003366),
         ),
       );
-      
+
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding work type: $e'),
@@ -81,6 +83,7 @@ class _AddWorkTypeState extends State<AddWorkType> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
+                      // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
@@ -130,7 +133,7 @@ class _AddWorkTypeState extends State<AddWorkType> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -145,9 +148,9 @@ class _AddWorkTypeState extends State<AddWorkType> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     TextFormField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
@@ -160,16 +163,17 @@ class _AddWorkTypeState extends State<AddWorkType> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               Row(
                 children: [
                   Expanded(
                     child: CustomButton(
                       text: 'Cancel',
                       variant: ButtonVariant.outline,
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),

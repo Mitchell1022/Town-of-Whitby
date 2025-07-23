@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -61,7 +63,7 @@ class _LogWorkState extends State<LogWork> {
       final locations = await DatabaseService.getLocations();
       final workTypes = await DatabaseService.getWorkTypes();
       final workers = await DatabaseService.getWorkers();
-      
+
       if (mounted) {
         setState(() {
           _locations = locations;
@@ -73,9 +75,9 @@ class _LogWorkState extends State<LogWork> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingData = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
       }
     }
   }
@@ -165,32 +167,36 @@ class _LogWorkState extends State<LogWork> {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _selectedWorkers.map((workerId) {
-                      final worker = _workers.firstWhere(
-                        (w) => w['id'] == workerId,
-                        orElse: () => {'name': 'Unknown Worker'},
-                      );
-                      return Chip(
-                        label: Text(worker['name']),
-                        onDeleted: () {
-                          setState(() {
-                            _selectedWorkers.remove(workerId);
-                          });
-                        },
-                        backgroundColor: _whitbyBlue.withOpacity(0.1),
-                        deleteIconColor: _whitbyBlue,
-                      );
-                    }).toList(),
+                    children:
+                        _selectedWorkers.map((workerId) {
+                          final worker = _workers.firstWhere(
+                            (w) => w['id'] == workerId,
+                            orElse: () => {'name': 'Unknown Worker'},
+                          );
+                          return Chip(
+                            label: Text(worker['name']),
+                            onDeleted: () {
+                              setState(() {
+                                _selectedWorkers.remove(workerId);
+                              });
+                            },
+                            // ignore: deprecated_member_use
+                            backgroundColor: _whitbyBlue.withOpacity(0.1),
+                            deleteIconColor: _whitbyBlue,
+                          );
+                        }).toList(),
                   ),
                 ),
                 Divider(height: 1, color: Colors.grey[300]),
               ],
-              
+
               // Add worker button/dropdown
               ListTile(
                 leading: Icon(Icons.add, color: _whitbyBlue),
                 title: Text(
-                  _selectedWorkers.isEmpty ? 'Select Workers' : 'Add More Workers',
+                  _selectedWorkers.isEmpty
+                      ? 'Select Workers'
+                      : 'Add More Workers',
                   style: TextStyle(color: _whitbyBlue),
                 ),
                 onTap: _showWorkerPicker,
@@ -203,9 +209,10 @@ class _LogWorkState extends State<LogWork> {
   }
 
   Future<void> _showWorkerPicker() async {
-    final availableWorkers = _workers.where((worker) {
-      return !_selectedWorkers.contains(worker['id']);
-    }).toList();
+    final availableWorkers =
+        _workers.where((worker) {
+          return !_selectedWorkers.contains(worker['id']);
+        }).toList();
 
     if (availableWorkers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -216,10 +223,11 @@ class _LogWorkState extends State<LogWork> {
 
     final selected = await showDialog<List<String>>(
       context: context,
-      builder: (context) => WorkerPickerDialog(
-        availableWorkers: availableWorkers,
-        selectedWorkers: _selectedWorkers,
-      ),
+      builder:
+          (context) => WorkerPickerDialog(
+            availableWorkers: availableWorkers,
+            selectedWorkers: _selectedWorkers,
+          ),
     );
 
     if (selected != null) {
@@ -284,23 +292,32 @@ class _LogWorkState extends State<LogWork> {
     try {
       final duration = _workDuration?.inMinutes ?? 0;
       final photoUrls = await _uploadImages();
-      
-      final startTimeText = _startTime != null 
-          ? TimeOfDay(hour: _startTime!.hour, minute: _startTime!.minute).format(currentContext)
-          : null;
-      final endTimeText = _endTime != null 
-          ? TimeOfDay(hour: _endTime!.hour, minute: _endTime!.minute).format(currentContext)
-          : null;
-          
+
+      final startTimeText =
+          _startTime != null
+              ? TimeOfDay(
+                hour: _startTime!.hour,
+                minute: _startTime!.minute,
+              ).format(currentContext)
+              : null;
+      final endTimeText =
+          _endTime != null
+              ? TimeOfDay(
+                hour: _endTime!.hour,
+                minute: _endTime!.minute,
+              ).format(currentContext)
+              : null;
+
       await FirebaseFirestore.instance.collection('logs').add({
         'location': _selectedLocation,
         'workType':
             _selectedWorkType == 'Other'
                 ? _otherWorkTypeDescription
                 : _selectedWorkType,
-        'summary': _summaryController.text.trim().isNotEmpty 
-            ? _summaryController.text.trim() 
-            : _selectedWorkType,
+        'summary':
+            _summaryController.text.trim().isNotEmpty
+                ? _summaryController.text.trim()
+                : _selectedWorkType,
         'description': _descriptionController.text.trim(),
         'workers': _selectedWorkers,
         'workDate': _workDate != null ? Timestamp.fromDate(_workDate!) : null,
@@ -369,81 +386,83 @@ class _LogWorkState extends State<LogWork> {
               _isLoadingData
                   ? const Center(child: CircularProgressIndicator())
                   : Column(
-                      children: [
-                        DropdownButtonFormField<String>(
-                          value: _selectedLocation,
-                          decoration: inputDecoration('Location'),
-                          items: [
-                            ..._locations.map(
-                              (loc) => DropdownMenuItem(
-                                value: loc['name'],
-                                child: Text(loc['name']),
-                              ),
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: _selectedLocation,
+                        decoration: inputDecoration('Location'),
+                        items: [
+                          ..._locations.map(
+                            (loc) => DropdownMenuItem(
+                              value: loc['name'],
+                              child: Text(loc['name']),
                             ),
-                            const DropdownMenuItem(
-                              value: '__add_new__',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.add, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Add New Location'),
-                                ],
-                              ),
+                          ),
+                          const DropdownMenuItem(
+                            value: '__add_new__',
+                            child: Row(
+                              children: [
+                                Icon(Icons.add, size: 20),
+                                SizedBox(width: 8),
+                                Text('Add New Location'),
+                              ],
                             ),
-                          ],
-                          onChanged: (v) {
-                            if (v == '__add_new__') {
-                              _navigateToAddLocation();
-                            } else {
-                              setState(() => _selectedLocation = v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v == '__add_new__') {
+                            _navigateToAddLocation();
+                          } else {
+                            setState(() => _selectedLocation = v);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
               const SizedBox(height: 16),
               _isLoadingData
                   ? const Center(child: CircularProgressIndicator())
                   : Column(
-                      children: [
-                        DropdownButtonFormField<String>(
-                          value: _selectedWorkType,
-                          decoration: inputDecoration('Work Type'),
-                          items: [
-                            ..._workTypes.map(
-                              (workType) => DropdownMenuItem(
-                                value: workType['name'],
-                                child: Text(workType['name']),
-                              ),
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: _selectedWorkType,
+                        decoration: inputDecoration('Work Type'),
+                        items: [
+                          ..._workTypes.map(
+                            (workType) => DropdownMenuItem(
+                              value: workType['name'],
+                              child: Text(workType['name']),
                             ),
-                            const DropdownMenuItem(
-                              value: 'Other',
-                              child: Text('Other'),
+                          ),
+                          const DropdownMenuItem(
+                            value: 'Other',
+                            child: Text('Other'),
+                          ),
+                          const DropdownMenuItem(
+                            value: '__add_new__',
+                            child: Row(
+                              children: [
+                                Icon(Icons.add, size: 20),
+                                SizedBox(width: 8),
+                                Text('Add New Work Type'),
+                              ],
                             ),
-                            const DropdownMenuItem(
-                              value: '__add_new__',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.add, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Add New Work Type'),
-                                ],
-                              ),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v == '__add_new__') {
-                              _navigateToAddWorkType();
-                            } else {
-                              setState(() {
-                                _selectedWorkType = v;
-                                if (v != 'Other') _otherWorkTypeDescription = null;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v == '__add_new__') {
+                            _navigateToAddWorkType();
+                          } else {
+                            setState(() {
+                              _selectedWorkType = v;
+                              if (v != 'Other') {
+                                _otherWorkTypeDescription = null;
+                              }
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
               if (_selectedWorkType == 'Other') ...[
                 const SizedBox(height: 16),
                 TextFormField(
@@ -506,20 +525,25 @@ class _LogWorkState extends State<LogWork> {
 
               // ── Work Details ──────────────────────────────────────
               const SizedBox(height: 24),
-              const _SectionHeader(icon: Icons.description, title: 'Work Details'),
+              const _SectionHeader(
+                icon: Icons.description,
+                title: 'Work Details',
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _summaryController,
-                decoration: inputDecoration('Work Summary *').copyWith(
-                  hintText: 'Brief description of work completed',
-                ),
+                decoration: inputDecoration(
+                  'Work Summary *',
+                ).copyWith(hintText: 'Brief description of work completed'),
                 maxLength: 100,
                 textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: inputDecoration('Additional Details (Optional)').copyWith(
+                decoration: inputDecoration(
+                  'Additional Details (Optional)',
+                ).copyWith(
                   hintText: 'Detailed description, notes, or observations',
                 ),
                 maxLines: 3,
@@ -702,9 +726,10 @@ class _WorkerPickerDialogState extends State<WorkerPickerDialog> {
 
                     return CheckboxListTile(
                       title: Text(worker['name'] ?? 'Unknown'),
-                      subtitle: worker['role']?.toString().isNotEmpty == true
-                          ? Text(worker['role'])
-                          : null,
+                      subtitle:
+                          worker['role']?.toString().isNotEmpty == true
+                              ? Text(worker['role'])
+                              : null,
                       value: isSelected,
                       onChanged: (value) {
                         setState(() {

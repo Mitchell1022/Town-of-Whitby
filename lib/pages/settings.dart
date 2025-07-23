@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'manage_workers.dart';
@@ -18,7 +20,7 @@ class _SettingsState extends State<Settings> {
   bool _darkMode = false;
   String _defaultLocation = '';
   int _autoLogoutMinutes = 30;
-  
+
   List<String> _availableLocations = ['Main Office', 'Civic Centre', 'Depot'];
 
   @override
@@ -164,25 +166,31 @@ class _SettingsState extends State<Settings> {
             _buildSectionHeader('Work Preferences', Icons.work),
             _buildSettingTile(
               title: 'Default Location',
-              subtitle: _defaultLocation.isEmpty ? 'No default set' : _defaultLocation,
+              subtitle:
+                  _defaultLocation.isEmpty
+                      ? 'No default set'
+                      : _defaultLocation,
               icon: Icons.place,
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {
                 final selected = await showDialog<String>(
                   context: context,
-                  builder: (context) => SimpleDialog(
-                    title: const Text('Select Default Location'),
-                    children: [
-                      SimpleDialogOption(
-                        onPressed: () => Navigator.pop(context, ''),
-                        child: const Text('None'),
+                  builder:
+                      (context) => SimpleDialog(
+                        title: const Text('Select Default Location'),
+                        children: [
+                          SimpleDialogOption(
+                            onPressed: () => Navigator.pop(context, ''),
+                            child: const Text('None'),
+                          ),
+                          ..._availableLocations.map(
+                            (location) => SimpleDialogOption(
+                              onPressed: () => Navigator.pop(context, location),
+                              child: Text(location),
+                            ),
+                          ),
+                        ],
                       ),
-                      ..._availableLocations.map((location) => SimpleDialogOption(
-                        onPressed: () => Navigator.pop(context, location),
-                        child: Text(location),
-                      )),
-                    ],
-                  ),
                 );
                 if (selected != null) {
                   setState(() => _defaultLocation = selected);
@@ -192,19 +200,27 @@ class _SettingsState extends State<Settings> {
             ),
             _buildSettingTile(
               title: 'Auto-logout',
-              subtitle: 'Logout after $_autoLogoutMinutes minutes of inactivity',
+              subtitle:
+                  'Logout after $_autoLogoutMinutes minutes of inactivity',
               icon: Icons.timer,
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {
                 final selected = await showDialog<int>(
                   context: context,
-                  builder: (context) => SimpleDialog(
-                    title: const Text('Auto-logout Timer'),
-                    children: [15, 30, 60, 120].map((minutes) => SimpleDialogOption(
-                      onPressed: () => Navigator.pop(context, minutes),
-                      child: Text('$minutes minutes'),
-                    )).toList(),
-                  ),
+                  builder:
+                      (context) => SimpleDialog(
+                        title: const Text('Auto-logout Timer'),
+                        children:
+                            [15, 30, 60, 120]
+                                .map(
+                                  (minutes) => SimpleDialogOption(
+                                    onPressed:
+                                        () => Navigator.pop(context, minutes),
+                                    child: Text('$minutes minutes'),
+                                  ),
+                                )
+                                .toList(),
+                      ),
                 );
                 if (selected != null) {
                   setState(() => _autoLogoutMinutes = selected);
@@ -223,7 +239,9 @@ class _SettingsState extends State<Settings> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ManageWorkers()),
+                  MaterialPageRoute(
+                    builder: (context) => const ManageWorkers(),
+                  ),
                 );
               },
             ),
@@ -246,25 +264,35 @@ class _SettingsState extends State<Settings> {
               onTap: () async {
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Clear Cache'),
-                    content: const Text('This will clear temporary files. Your data will not be affected.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Clear Cache'),
+                        content: const Text(
+                          'This will clear temporary files. Your data will not be affected.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _whitbyBlue,
+                            ),
+                            child: const Text(
+                              'Clear',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: _whitbyBlue),
-                        child: const Text('Clear', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
                 );
                 if (confirmed == true) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Cache cleared successfully!')),
+                    const SnackBar(
+                      content: Text('Cache cleared successfully!'),
+                    ),
                   );
                 }
               },
@@ -295,7 +323,9 @@ class _SettingsState extends State<Settings> {
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Support contact: admin@whitby.ca')),
+                  const SnackBar(
+                    content: Text('Support contact: admin@whitby.ca'),
+                  ),
                 );
               },
             ),

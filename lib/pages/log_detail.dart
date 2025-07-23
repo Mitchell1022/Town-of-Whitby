@@ -8,17 +8,13 @@ class LogDetail extends StatelessWidget {
   final Map<String, dynamic> logData;
   final String logId;
 
-  const LogDetail({
-    super.key,
-    required this.logData,
-    required this.logId,
-  });
+  const LogDetail({super.key, required this.logData, required this.logId});
 
   @override
   Widget build(BuildContext context) {
-    final DateFormat _dateFormat = DateFormat('EEEE, MMMM d, yyyy');
-    final DateFormat _timeFormat = DateFormat.jm();
-    
+    final DateFormat dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+    final DateFormat timeFormat = DateFormat.jm();
+
     final workDate = logData['workDate']?.toDate() as DateTime?;
     final startTime = logData['startTime'] as String?;
     final endTime = logData['endTime'] as String?;
@@ -46,7 +42,9 @@ class LogDetail extends StatelessWidget {
             // Header Card
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -57,6 +55,7 @@ class LogDetail extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
                             color: _whitbyBlue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -94,14 +93,22 @@ class LogDetail extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
+                        // ignore: deprecated_member_use
                         color: _whitbyBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on, color: _whitbyBlue, size: 18),
+                          const Icon(
+                            Icons.location_on,
+                            color: _whitbyBlue,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             location,
@@ -124,7 +131,9 @@ class LogDetail extends StatelessWidget {
             // Date & Time Card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -132,7 +141,11 @@ class LogDetail extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.schedule, color: _whitbyBlue, size: 20),
+                        const Icon(
+                          Icons.schedule,
+                          color: _whitbyBlue,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         const Text(
                           'Date & Time',
@@ -150,7 +163,9 @@ class LogDetail extends StatelessWidget {
                         Expanded(
                           child: _buildInfoItem(
                             'Date',
-                            workDate != null ? _dateFormat.format(workDate) : 'Not specified',
+                            workDate != null
+                                ? dateFormat.format(workDate)
+                                : 'Not specified',
                             Icons.calendar_today,
                           ),
                         ),
@@ -178,7 +193,7 @@ class LogDetail extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildInfoItem(
                       'Duration',
-                      '${(duration / 60).toStringAsFixed(1)} hours (${duration} minutes)',
+                      '${(duration / 60).toStringAsFixed(1)} hours ($duration minutes)',
                       Icons.timer,
                     ),
                   ],
@@ -192,7 +207,9 @@ class LogDetail extends StatelessWidget {
             if (workers.isNotEmpty) ...[
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -200,7 +217,11 @@ class LogDetail extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.people, color: _whitbyBlue, size: 20),
+                          const Icon(
+                            Icons.people,
+                            color: _whitbyBlue,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Workers (${workers.length})',
@@ -216,30 +237,42 @@ class LogDetail extends StatelessWidget {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: workers.map<Widget>((worker) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.green.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.person, size: 16, color: Colors.green),
-                                const SizedBox(width: 6),
-                                Text(
-                                  worker.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w500,
+                        children:
+                            workers.map<Widget>((worker) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  // ignore: deprecated_member_use
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    // ignore: deprecated_member_use
+                                    color: Colors.green.withOpacity(0.3),
                                   ),
                                 ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      worker.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ],
                   ),
@@ -252,7 +285,9 @@ class LogDetail extends StatelessWidget {
             if (description.isNotEmpty) ...[
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -277,6 +312,7 @@ class LogDetail extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
                           color: Colors.grey.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -300,7 +336,9 @@ class LogDetail extends StatelessWidget {
             if (photos.isNotEmpty) ...[
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -308,7 +346,11 @@ class LogDetail extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.photo_library, color: _whitbyBlue, size: 20),
+                          const Icon(
+                            Icons.photo_library,
+                            color: _whitbyBlue,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Photos (${photos.length})',
@@ -324,12 +366,13 @@ class LogDetail extends StatelessWidget {
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1,
+                            ),
                         itemCount: photos.length,
                         itemBuilder: (context, index) {
                           return GestureDetector(
@@ -341,20 +384,24 @@ class LogDetail extends StatelessWidget {
                               child: CachedNetworkImage(
                                 imageUrl: photos[index],
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  color: _whitbyBlue.withOpacity(0.1),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.grey,
-                                    size: 32,
-                                  ),
-                                ),
+                                placeholder:
+                                    (context, url) => Container(
+                                      // ignore: deprecated_member_use
+                                      color: _whitbyBlue.withOpacity(0.1),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                errorWidget:
+                                    (context, url, error) => Container(
+                                      // ignore: deprecated_member_use
+                                      color: Colors.grey.withOpacity(0.1),
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        color: Colors.grey,
+                                        size: 32,
+                                      ),
+                                    ),
                               ),
                             ),
                           );
@@ -377,6 +424,7 @@ class LogDetail extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: Colors.grey.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -415,32 +463,35 @@ class LogDetail extends StatelessWidget {
   void _showFullScreenImage(BuildContext context, String imageUrl) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-          body: Center(
-            child: InteractiveViewer(
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-                errorWidget: (context, url, error) => const Center(
-                  child: Icon(
-                    Icons.broken_image,
-                    color: Colors.white,
-                    size: 64,
+        builder:
+            (context) => Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              body: Center(
+                child: InteractiveViewer(
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.contain,
+                    placeholder:
+                        (context, url) => const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ),
+                    errorWidget:
+                        (context, url, error) => const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 64,
+                          ),
+                        ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_button.dart';
@@ -38,18 +40,18 @@ class _AddLocationState extends State<AddLocation> {
       });
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Location added successfully!'),
           backgroundColor: Color(0xFF003366),
         ),
       );
-      
+
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding location: $e'),
@@ -133,7 +135,7 @@ class _AddLocationState extends State<AddLocation> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -148,9 +150,9 @@ class _AddLocationState extends State<AddLocation> {
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     TextFormField(
                       controller: _addressController,
                       decoration: const InputDecoration(
@@ -160,9 +162,9 @@ class _AddLocationState extends State<AddLocation> {
                       ),
                       maxLines: 2,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     TextFormField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
@@ -175,16 +177,17 @@ class _AddLocationState extends State<AddLocation> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               Row(
                 children: [
                   Expanded(
                     child: CustomButton(
                       text: 'Cancel',
                       variant: ButtonVariant.outline,
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),

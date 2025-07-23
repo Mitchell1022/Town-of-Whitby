@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'pages/home.dart';
 import 'pages/view_logs.dart';
@@ -6,6 +8,10 @@ import 'pages/add_location.dart';
 import 'pages/add_work_type.dart';
 import 'pages/add_worker.dart';
 import 'pages/location_status.dart';
+import 'pages/account_selection.dart';
+import 'pages/my_work.dart';
+import 'services/account_service.dart';
+import 'services/database_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -70,29 +76,168 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme(
           bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
           bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF003366)),
-          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF003366)),
+          titleLarge: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003366),
+          ),
+          titleMedium: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF003366),
+          ),
         ),
         iconTheme: const IconThemeData(color: Color(0xFF003366)),
       ),
-      home: const MainNavigation(),
+      home: const _AccountWrapper(),
     );
   }
 }
 
-class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+class _AccountWrapper extends StatefulWidget {
+  const _AccountWrapper({super.key});
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<_AccountWrapper> createState() => _AccountWrapperState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _AccountWrapperState extends State<_AccountWrapper> {
+  bool _hasAccount = false;
+  bool _isLoading = true;
+  String? _currentWorkerName;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAccount();
+  }
+
+  Future<void> _checkAccount() async {
+    try {
+      final hasAccount = await AccountService.hasActiveAccount();
+      if (hasAccount) {
+        final accountId = await AccountService.getCurrentAccountId();
+        if (accountId != null) {
+          final workers = await DatabaseService.getWorkers();
+          final worker = workers.firstWhere(
+            (w) => w['id'] == accountId,
+            orElse: () => {'name': 'Unknown Worker'},
+          );
+          if (mounted) {
+            setState(() {
+              _hasAccount = true;
+              _currentWorkerName = worker['name'];
+              _isLoading = false;
+            });
+          }
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _hasAccount = false;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasAccount = false;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _selectAccount() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const AccountSelection()),
+    );
+    if (result == true) {
+      _checkAccount();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_hasAccount) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/whitby_logo.png', height: 100),
+                const SizedBox(height: 32),
+                const Text(
+                  'Welcome to Town of Whitby\nWork Log Portal',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003366),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Please select your worker account to continue',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton.icon(
+                  onPressed: _selectAccount,
+                  icon: const Icon(Icons.person, color: Colors.white),
+                  label: const Text(
+                    'Select Account',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF003366),
+                    minimumSize: const Size(200, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return _MainNavigationWithAccount(workerName: _currentWorkerName ?? 'Worker');
+  }
+}
+
+class _MainNavigationWithAccount extends StatefulWidget {
+  final String workerName;
+  
+  const _MainNavigationWithAccount({required this.workerName});
+
+  @override
+  State<_MainNavigationWithAccount> createState() => _MainNavigationWithAccountState();
+}
+
+class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  final List<Widget> _pages = [const Home(), const ViewLogs()];
+  final List<Widget> _pages = [const Home(), const ViewLogs(), const MyWork()];
 
   void _toggleDrawer() {
     if (_isDrawerOpen) {
@@ -108,15 +253,22 @@ class _MainNavigationState extends State<MainNavigation> {
       key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: const Color(0xFF003366),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(width: 10),
             const Text(
               'Town of Whitby',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: 18,
                 color: Colors.white,
+              ),
+            ),
+            Text(
+              'Logged in as ${widget.workerName}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white70,
               ),
             ),
           ],
@@ -193,7 +345,9 @@ class _MainNavigationState extends State<MainNavigation> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LocationStatus()),
+                  MaterialPageRoute(
+                    builder: (context) => const LocationStatus(),
+                  ),
                 );
               },
             ),
@@ -206,6 +360,21 @@ class _MainNavigationState extends State<MainNavigation> {
                   context,
                   MaterialPageRoute(builder: (context) => const Settings()),
                 );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Switch Account', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                Navigator.pop(context);
+                await AccountService.clearCurrentAccount();
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const _AccountWrapper()),
+                  );
+                }
               },
             ),
           ],
@@ -221,14 +390,9 @@ class _MainNavigationState extends State<MainNavigation> {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'View Logs',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'View Logs'),
+          BottomNavigationBarItem(icon: Icon(Icons.work), label: 'My Work'),
         ],
       ),
     );

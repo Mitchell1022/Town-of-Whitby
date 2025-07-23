@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/database_service.dart';
@@ -15,7 +17,7 @@ class _LocationStatusState extends State<LocationStatus> {
   List<Map<String, dynamic>> _locationData = [];
   bool _isLoading = true;
   String _selectedFilter = 'all';
-  
+
   final DateFormat _dateFormat = DateFormat.yMMMd();
 
   @override
@@ -45,22 +47,32 @@ class _LocationStatusState extends State<LocationStatus> {
 
   List<Map<String, dynamic>> get _filteredData {
     if (_selectedFilter == 'all') return _locationData;
-    
+
     switch (_selectedFilter) {
       case 'critical':
-        return _locationData.where((loc) => 
-            (loc['daysSinceLastWork'] as int) > 60).toList();
+        return _locationData
+            .where((loc) => (loc['daysSinceLastWork'] as int) > 60)
+            .toList();
       case 'attention':
-        return _locationData.where((loc) => 
-            (loc['daysSinceLastWork'] as int) > 30 && 
-            (loc['daysSinceLastWork'] as int) <= 60).toList();
+        return _locationData
+            .where(
+              (loc) =>
+                  (loc['daysSinceLastWork'] as int) > 30 &&
+                  (loc['daysSinceLastWork'] as int) <= 60,
+            )
+            .toList();
       case 'moderate':
-        return _locationData.where((loc) => 
-            (loc['daysSinceLastWork'] as int) > 7 && 
-            (loc['daysSinceLastWork'] as int) <= 30).toList();
+        return _locationData
+            .where(
+              (loc) =>
+                  (loc['daysSinceLastWork'] as int) > 7 &&
+                  (loc['daysSinceLastWork'] as int) <= 30,
+            )
+            .toList();
       case 'active':
-        return _locationData.where((loc) => 
-            (loc['daysSinceLastWork'] as int) <= 7).toList();
+        return _locationData
+            .where((loc) => (loc['daysSinceLastWork'] as int) <= 7)
+            .toList();
       default:
         return _locationData;
     }
@@ -68,16 +80,25 @@ class _LocationStatusState extends State<LocationStatus> {
 
   Widget _buildStatsCard() {
     if (_locationData.isEmpty) return const SizedBox.shrink();
-    
+
     final totalLocations = _locationData.length;
-    final criticalCount = _locationData.where((loc) => 
-        (loc['daysSinceLastWork'] as int) > 60).length;
-    final attentionCount = _locationData.where((loc) => 
-        (loc['daysSinceLastWork'] as int) > 30 && 
-        (loc['daysSinceLastWork'] as int) <= 60).length;
-    final activeCount = _locationData.where((loc) => 
-        (loc['daysSinceLastWork'] as int) <= 7).length;
-    
+    final criticalCount =
+        _locationData
+            .where((loc) => (loc['daysSinceLastWork'] as int) > 60)
+            .length;
+    final attentionCount =
+        _locationData
+            .where(
+              (loc) =>
+                  (loc['daysSinceLastWork'] as int) > 30 &&
+                  (loc['daysSinceLastWork'] as int) <= 60,
+            )
+            .length;
+    final activeCount =
+        _locationData
+            .where((loc) => (loc['daysSinceLastWork'] as int) <= 7)
+            .length;
+
     return Card(
       elevation: 3,
       margin: const EdgeInsets.all(16),
@@ -116,10 +137,7 @@ class _LocationStatusState extends State<LocationStatus> {
                       ),
                       Text(
                         'Current status of all work locations',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
                   ),
@@ -205,9 +223,21 @@ class _LocationStatusState extends State<LocationStatus> {
   Widget _buildFilterChips() {
     final filters = [
       {'key': 'all', 'label': 'All Locations', 'color': Colors.grey},
-      {'key': 'critical', 'label': 'Critical', 'color': const Color(0xFFF44336)},
-      {'key': 'attention', 'label': 'Attention', 'color': const Color(0xFFFF5722)},
-      {'key': 'moderate', 'label': 'Moderate', 'color': const Color(0xFFFF9800)},
+      {
+        'key': 'critical',
+        'label': 'Critical',
+        'color': const Color(0xFFF44336),
+      },
+      {
+        'key': 'attention',
+        'label': 'Attention',
+        'color': const Color(0xFFFF5722),
+      },
+      {
+        'key': 'moderate',
+        'label': 'Moderate',
+        'color': const Color(0xFFFF9800),
+      },
       {'key': 'active', 'label': 'Active', 'color': const Color(0xFF4CAF50)},
     ];
 
@@ -221,14 +251,12 @@ class _LocationStatusState extends State<LocationStatus> {
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = _selectedFilter == filter['key'];
-          
+
           return FilterChip(
             label: Text(
               filter['label'] as String,
               style: TextStyle(
-                color: isSelected 
-                    ? Colors.white 
-                    : filter['color'] as Color,
+                color: isSelected ? Colors.white : filter['color'] as Color,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -299,7 +327,10 @@ class _LocationStatusState extends State<LocationStatus> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -317,7 +348,7 @@ class _LocationStatusState extends State<LocationStatus> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Status details
               Container(
                 padding: const EdgeInsets.all(12),
@@ -340,7 +371,7 @@ class _LocationStatusState extends State<LocationStatus> {
                         ),
                         Expanded(
                           child: Text(
-                            lastWorkDate != null 
+                            lastWorkDate != null
                                 ? '${_dateFormat.format(lastWorkDate)} ($daysSince days ago)'
                                 : 'No work recorded',
                             style: TextStyle(color: Colors.grey[600]),
@@ -373,7 +404,11 @@ class _LocationStatusState extends State<LocationStatus> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Recent Hours: ',
@@ -413,9 +448,9 @@ class _LocationStatusState extends State<LocationStatus> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Next action
               Container(
                 padding: const EdgeInsets.all(12),
@@ -426,11 +461,7 @@ class _LocationStatusState extends State<LocationStatus> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: statusColor,
-                      size: 20,
-                    ),
+                    Icon(Icons.lightbulb_outline, color: statusColor, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -480,31 +511,33 @@ class _LocationStatusState extends State<LocationStatus> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _locationData.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _locationData.isEmpty
               ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.location_off, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text(
-                        'No location data available',
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildStatsCard(),
-                    const SizedBox(height: 8),
-                    _buildFilterChips(),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: _filteredData.isEmpty
-                          ? Center(
+                    Icon(Icons.location_off, size: 64, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text(
+                      'No location data available',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ],
+                ),
+              )
+              : Column(
+                children: [
+                  _buildStatsCard(),
+                  const SizedBox(height: 8),
+                  _buildFilterChips(),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child:
+                        _filteredData.isEmpty
+                            ? Center(
                               child: Text(
                                 'No locations match the selected filter',
                                 style: TextStyle(
@@ -513,15 +546,15 @@ class _LocationStatusState extends State<LocationStatus> {
                                 ),
                               ),
                             )
-                          : ListView.builder(
+                            : ListView.builder(
                               itemCount: _filteredData.length,
                               itemBuilder: (context, index) {
                                 return _buildLocationCard(_filteredData[index]);
                               },
                             ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
     );
   }
 }

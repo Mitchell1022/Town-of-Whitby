@@ -1,9 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:town_of_whitby/pages/log_work.dart';
 import 'add_work_type.dart';
 import 'view_logs.dart';
 import 'add_location.dart';
 import 'reports.dart';
+import 'location_status.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -15,10 +18,7 @@ class Home extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF8F9FA),
-            Colors.white,
-          ],
+          colors: [Color(0xFFF8F9FA), Colors.white],
         ),
       ),
       child: SingleChildScrollView(
@@ -57,10 +57,7 @@ class Home extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Track your daily work activities',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -70,7 +67,7 @@ class Home extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Primary Action Button
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 60,
               child: ElevatedButton.icon(
@@ -124,40 +121,44 @@ class Home extends StatelessWidget {
                   icon: Icons.list_alt,
                   title: 'View Logs',
                   subtitle: 'Browse all entries',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ViewLogs()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ViewLogs()),
+                      ),
                 ),
                 _buildQuickActionCard(
                   context,
                   icon: Icons.assessment,
                   title: 'Reports',
                   subtitle: 'View analytics',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Reports()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const Reports()),
+                      ),
                 ),
                 _buildQuickActionCard(
                   context,
                   icon: Icons.location_on,
-                  title: 'Add Location',
-                  subtitle: 'New work site',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddLocation()),
-                  ),
+                  title: 'Location Status',
+                  subtitle: 'Track locations',
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LocationStatus()),
+                      ),
                 ),
                 _buildQuickActionCard(
                   context,
                   icon: Icons.category,
                   title: 'Work Types',
                   subtitle: 'Manage categories',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddWorkType()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AddWorkType()),
+                      ),
                 ),
               ],
             ),
@@ -189,15 +190,14 @@ class Home extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: const Color(0xFF003366).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  size: 28,
-                  color: const Color(0xFF003366),
+                child: Center(
+                  child: Icon(icon, size: 28, color: const Color(0xFF003366)),
                 ),
               ),
               const SizedBox(height: 12),
@@ -213,10 +213,7 @@ class Home extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../widgets/custom_button.dart';
@@ -41,18 +43,18 @@ class _AddWorkerState extends State<AddWorker> {
       );
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Worker added successfully!'),
           backgroundColor: _whitbyBlue,
         ),
       );
-      
+
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding worker: $e'),
@@ -136,7 +138,7 @@ class _AddWorkerState extends State<AddWorker> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -152,9 +154,9 @@ class _AddWorkerState extends State<AddWorker> {
                       },
                       textCapitalization: TextCapitalization.words,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -165,16 +167,18 @@ class _AddWorkerState extends State<AddWorker> {
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
                             return 'Please enter a valid email address';
                           }
                         }
                         return null;
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     TextFormField(
                       controller: _roleController,
                       decoration: const InputDecoration(
@@ -184,9 +188,9 @@ class _AddWorkerState extends State<AddWorker> {
                       ),
                       textCapitalization: TextCapitalization.words,
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -213,7 +217,9 @@ class _AddWorkerState extends State<AddWorker> {
                                   ),
                                 ),
                                 Text(
-                                  _isActive ? 'Active - Can be assigned to work logs' : 'Inactive - Cannot be assigned to work logs',
+                                  _isActive
+                                      ? 'Active - Can be assigned to work logs'
+                                      : 'Inactive - Cannot be assigned to work logs',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -224,7 +230,8 @@ class _AddWorkerState extends State<AddWorker> {
                           ),
                           Switch(
                             value: _isActive,
-                            onChanged: (value) => setState(() => _isActive = value),
+                            onChanged:
+                                (value) => setState(() => _isActive = value),
                             activeColor: _whitbyBlue,
                           ),
                         ],
@@ -233,16 +240,17 @@ class _AddWorkerState extends State<AddWorker> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               Row(
                 children: [
                   Expanded(
                     child: CustomButton(
                       text: 'Cancel',
                       variant: ButtonVariant.outline,
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -258,9 +266,9 @@ class _AddWorkerState extends State<AddWorker> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
