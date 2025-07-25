@@ -54,7 +54,6 @@ class _MyWorkState extends State<MyWork> with SingleTickerProviderStateMixin {
       final logsSnapshot = await FirebaseFirestore.instance
           .collection('logs')
           .where('workers', arrayContains: _currentWorkerId)
-          .orderBy('workDate', descending: true)
           .get();
 
       final logs = logsSnapshot.docs.map((doc) {
@@ -64,6 +63,16 @@ class _MyWorkState extends State<MyWork> with SingleTickerProviderStateMixin {
           ...data,
         };
       }).toList();
+
+      // Sort logs by workDate in descending order (most recent first)
+      logs.sort((a, b) {
+        final aDate = (a['workDate'] as Timestamp?)?.toDate();
+        final bDate = (b['workDate'] as Timestamp?)?.toDate();
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
 
       // Calculate time statistics
       final now = DateTime.now();

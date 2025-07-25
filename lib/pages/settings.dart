@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'manage_workers.dart';
+import '../providers/theme_provider.dart';
+import '../widgets/global_navigation_wrapper.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
@@ -96,17 +99,14 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return PageWithBottomNav(
+      title: 'Settings',
+      child: Container(
+        color: const Color(0xFFF8F9FA),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // General Settings
             _buildSectionHeader('General', Icons.settings),
             _buildSettingTile(
@@ -151,15 +151,21 @@ class _SettingsState extends State<Settings> {
 
             // Appearance
             _buildSectionHeader('Appearance', Icons.palette),
-            _buildSettingTile(
-              title: 'Dark Mode',
-              subtitle: 'Use dark theme (coming soon)',
-              icon: Icons.dark_mode,
-              trailing: Switch(
-                value: _darkMode,
-                onChanged: null, // Disabled for now
-                activeColor: _whitbyBlue,
-              ),
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return _buildSettingTile(
+                  title: 'Dark Mode',
+                  subtitle: themeProvider.isDarkMode ? 'Dark theme active' : 'Light theme active',
+                  icon: themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                  trailing: Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: (value) {
+                      themeProvider.toggleTheme();
+                    },
+                    activeColor: _whitbyBlue,
+                  ),
+                );
+              },
             ),
 
             // Work Settings
@@ -331,7 +337,8 @@ class _SettingsState extends State<Settings> {
             ),
 
             const SizedBox(height: 32),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -2,11 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:town_of_whitby/pages/log_work.dart';
-import 'add_work_type.dart';
-import 'view_logs.dart';
-import 'add_location.dart';
+import 'manage_locations.dart';
 import 'reports.dart';
 import 'location_status.dart';
+import 'water_consumption.dart';
+import 'log_water_tank_fill.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -29,7 +29,7 @@ class Home extends StatelessWidget {
             // Header Section with Logo and Welcome
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -43,8 +43,8 @@ class Home extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Image.asset('assets/whitby_logo.png', height: 80),
-                  const SizedBox(height: 16),
+                  Image.asset('assets/whitby_logo.png', height: 60),
+                  const SizedBox(height: 12),
                   const Text(
                     'Work Log Portal',
                     style: TextStyle(
@@ -54,7 +54,7 @@ class Home extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     'Track your daily work activities',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
@@ -73,13 +73,43 @@ class Home extends StatelessWidget {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.add_circle, size: 24),
                 label: const Text(
-                  'Log New Work Entry',
+                  'Log Work',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const LogWork()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF003366),
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shadowColor: const Color(0xFF003366).withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Log Water Tank Fill Button
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.water_drop, size: 24),
+                label: const Text(
+                  'Log Water Tank Fill',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LogWaterTankFill()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -114,17 +144,17 @@ class Home extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 1.1,
+              childAspectRatio: 1.2,
               children: [
                 _buildQuickActionCard(
                   context,
-                  icon: Icons.list_alt,
-                  title: 'View Logs',
-                  subtitle: 'Browse all entries',
+                  icon: Icons.location_on,
+                  title: 'Location Status',
+                  subtitle: 'Track locations',
                   onTap:
                       () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ViewLogs()),
+                        MaterialPageRoute(builder: (_) => const LocationStatus()),
                       ),
                 ),
                 _buildQuickActionCard(
@@ -140,24 +170,24 @@ class Home extends StatelessWidget {
                 ),
                 _buildQuickActionCard(
                   context,
-                  icon: Icons.location_on,
-                  title: 'Location Status',
-                  subtitle: 'Track locations',
+                  icon: Icons.water_drop,
+                  title: 'Water Consumption',
+                  subtitle: 'Track water usage',
                   onTap:
                       () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const LocationStatus()),
+                        MaterialPageRoute(builder: (_) => const WaterConsumption()),
                       ),
                 ),
                 _buildQuickActionCard(
                   context,
-                  icon: Icons.category,
-                  title: 'Work Types',
-                  subtitle: 'Manage categories',
+                  icon: Icons.location_city,
+                  title: 'Manage Locations',
+                  subtitle: 'Add & edit',
                   onTap:
                       () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const AddWorkType()),
+                        MaterialPageRoute(builder: (_) => const ManageLocations()),
                       ),
                 ),
               ],
@@ -185,7 +215,7 @@ class Home extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -200,21 +230,25 @@ class Home extends StatelessWidget {
                   child: Icon(icon, size: 28, color: const Color(0xFF003366)),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF003366),
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

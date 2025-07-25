@@ -9,8 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../services/database_service.dart';
-import 'add_location.dart';
-import 'add_work_type.dart';
+import 'manage_locations.dart';
+import 'manage_work_categories.dart';
 
 /// Whitby brand colours
 const _whitbyBlue = Color(0xFF003366);
@@ -82,22 +82,22 @@ class _LogWorkState extends State<LogWork> {
     }
   }
 
-  Future<void> _navigateToAddLocation() async {
+  Future<void> _navigateToManageLocations() async {
     if (!mounted) return;
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AddLocation()),
+      MaterialPageRoute(builder: (context) => const ManageLocations()),
     );
     if (result != null && mounted) {
       _loadData();
     }
   }
 
-  Future<void> _navigateToAddWorkType() async {
+  Future<void> _navigateToManageWorkCategories() async {
     if (!mounted) return;
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AddWorkType()),
+      MaterialPageRoute(builder: (context) => const ManageWorkCategories()),
     );
     if (result != null && mounted) {
       _loadData();
@@ -410,7 +410,7 @@ class _LogWorkState extends State<LogWork> {
                         ],
                         onChanged: (v) {
                           if (v == '__add_new__') {
-                            _navigateToAddLocation();
+                            _navigateToManageLocations();
                           } else {
                             setState(() => _selectedLocation = v);
                           }
@@ -450,7 +450,7 @@ class _LogWorkState extends State<LogWork> {
                         ],
                         onChanged: (v) {
                           if (v == '__add_new__') {
-                            _navigateToAddWorkType();
+                            _navigateToManageWorkCategories();
                           } else {
                             setState(() {
                               _selectedWorkType = v;

@@ -1,44 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/global_navigation_wrapper.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
-class LogDetail extends StatelessWidget {
+class LogDetail extends StatefulWidget {
   final Map<String, dynamic> logData;
   final String logId;
 
   const LogDetail({super.key, required this.logData, required this.logId});
 
   @override
+  State<LogDetail> createState() => _LogDetailState();
+}
+
+class _LogDetailState extends State<LogDetail> {
+
+  Future<void> _deleteLog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Work Log'),
+        content: const Text(
+          'Are you sure you want to delete this work log? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('logs')
+            .doc(widget.logId)
+            .delete();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Work log deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate deletion
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting work log: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final DateFormat dateFormat = DateFormat('EEEE, MMMM d, yyyy');
     final DateFormat timeFormat = DateFormat.jm();
 
-    final workDate = logData['workDate']?.toDate() as DateTime?;
-    final startTime = logData['startTime'] as String?;
-    final endTime = logData['endTime'] as String?;
-    final duration = logData['durationMinutes'] as int? ?? 0;
-    final photos = logData['photos'] as List? ?? [];
-    final workers = logData['workers'] as List? ?? [];
-    final summary = logData['summary'] as String? ?? '';
-    final workType = logData['workType'] as String? ?? '';
-    final location = logData['location'] as String? ?? '';
-    final description = logData['description'] as String? ?? '';
+    // Fix potential timestamp conversion issues
+    DateTime? workDate;
+    try {
+      if (widget.logData['workDate'] is Timestamp) {
+        workDate = (widget.logData['workDate'] as Timestamp).toDate();
+      } else if (widget.logData['workDate'] is DateTime) {
+        workDate = widget.logData['workDate'] as DateTime;
+      }
+    } catch (e) {
+      print('Error parsing work date: $e');
+    }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Work Log Details'),
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final startTime = widget.logData['startTime'] as String? ?? '';
+    final endTime = widget.logData['endTime'] as String? ?? '';
+    final duration = widget.logData['durationMinutes'] as int? ?? 0;
+    final photos = widget.logData['photos'] as List? ?? [];
+    final workers = widget.logData['workers'] as List? ?? [];
+    final summary = widget.logData['summary'] as String? ?? '';
+    final workType = widget.logData['workType'] as String? ?? '';
+    final location = widget.logData['location'] as String? ?? '';
+    final description = widget.logData['description'] as String? ?? '';
+
+    return PageWithBottomNav(
+      title: 'Work Log Details',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete, color: Colors.white),
+          onPressed: _deleteLog,
+          tooltip: 'Delete Log',
+          ),
+        ],
+      child: Container(
+        color: const Color(0xFFF8F9FA),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Header Card
             Card(
               elevation: 3,
@@ -415,6 +488,7 @@ class LogDetail extends StatelessWidget {
 
             const SizedBox(height: 20),
           ],
+        ),
         ),
       ),
     );

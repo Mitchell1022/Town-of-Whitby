@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/global_navigation_wrapper.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
@@ -68,20 +69,17 @@ class _AddWorkerState extends State<AddWorker> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Add New Worker'),
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return PageWithBottomNav(
+      title: 'Add New Worker',
+      child: Container(
+        color: const Color(0xFFF8F9FA),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -293,6 +291,7 @@ class _AddWorkerState extends State<AddWorker> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

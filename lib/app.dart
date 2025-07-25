@@ -1,15 +1,18 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
 import 'pages/home.dart';
 import 'pages/view_logs.dart';
 import 'pages/settings.dart';
-import 'pages/add_location.dart';
-import 'pages/add_work_type.dart';
+import 'pages/manage_locations.dart';
+import 'pages/manage_work_categories.dart';
 import 'pages/add_worker.dart';
 import 'pages/location_status.dart';
 import 'pages/account_selection.dart';
 import 'pages/my_work.dart';
+import 'pages/my_profile.dart';
 import 'services/account_service.dart';
 import 'services/database_service.dart';
 
@@ -18,78 +21,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Town of Whitby',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF003366),
-          brightness: Brightness.light,
-        ).copyWith(
-          primary: const Color(0xFF003366),
-          secondary: const Color(0xFF0066CC),
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF003366),
-          elevation: 0,
-          centerTitle: false,
-          iconTheme: IconThemeData(color: Colors.white),
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
-        ),
-        cardTheme: CardTheme(
-          elevation: 2,
-          shadowColor: Colors.black.withOpacity(0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 2,
-            shadowColor: const Color(0xFF003366).withOpacity(0.3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF003366), width: 2),
-          ),
-        ),
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
-          bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
-          titleLarge: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF003366),
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF003366),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Color(0xFF003366)),
-      ),
-      home: const _AccountWrapper(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Town of Whitby',
+          theme: themeProvider.lightTheme,
+          darkTheme: themeProvider.darkTheme,
+          themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const _AccountWrapper(),
+        );
+      },
     );
   }
 }
@@ -233,11 +174,11 @@ class _MainNavigationWithAccount extends StatefulWidget {
 }
 
 class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1; // Start with Home (now at index 1)
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  final List<Widget> _pages = [const Home(), const ViewLogs(), const MyWork()];
+  final List<Widget> _pages = [const ViewLogs(), const Home(), const MyWork()];
 
   void _toggleDrawer() {
     if (_isDrawerOpen) {
@@ -277,6 +218,18 @@ class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> 
           icon: const Icon(Icons.menu),
           onPressed: _toggleDrawer,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyProfile()),
+              );
+            },
+            tooltip: 'My Profile',
+          ),
+        ],
       ),
       onDrawerChanged: (isOpened) {
         setState(() {
@@ -306,24 +259,24 @@ class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> 
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.add_location),
-              title: const Text('Add Location'),
+              leading: const Icon(Icons.location_city),
+              title: const Text('Manage Locations'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddLocation()),
+                  MaterialPageRoute(builder: (context) => const ManageLocations()),
                 );
               },
             ),
             ListTile(
-              leading: const Icon(Icons.build),
-              title: const Text('Add Work Type'),
+              leading: const Icon(Icons.category),
+              title: const Text('Manage Work Categories'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddWorkType()),
+                  MaterialPageRoute(builder: (context) => const ManageWorkCategories()),
                 );
               },
             ),
@@ -335,19 +288,6 @@ class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> 
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AddWorker()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics),
-              title: const Text('Location Status'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LocationStatus(),
-                  ),
                 );
               },
             ),
@@ -390,8 +330,8 @@ class _MainNavigationWithAccountState extends State<_MainNavigationWithAccount> 
         type: BottomNavigationBarType.fixed,
         elevation: 8,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'View Logs'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'My Work'),
         ],
       ),

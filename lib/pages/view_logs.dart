@@ -130,6 +130,56 @@ class _ViewLogsState extends State<ViewLogs> {
     _searchController.clear();
   });
 
+  Future<void> _deleteLog(String docId, String logTitle) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Work Log'),
+        content: Text(
+          'Are you sure you want to delete "$logTitle"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('logs')
+            .doc(docId)
+            .delete();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Work log deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting work log: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Widget _buildLogCard(
     Map<String, dynamic> data,
     bool isCompact,
@@ -148,13 +198,26 @@ class _ViewLogsState extends State<ViewLogs> {
         shadowColor: Colors.black.withOpacity(0.05),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LogDetail(logData: data, logId: docId),
-              ),
-            );
+          onTap: () async {
+            try {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LogDetail(logData: data, logId: docId),
+                ),
+              );
+              // If result is true, it means the log was deleted, so we don't need to do anything
+              // The stream will automatically update
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error opening log details: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
@@ -270,13 +333,26 @@ class _ViewLogsState extends State<ViewLogs> {
       shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LogDetail(logData: data, logId: docId),
-            ),
-          );
+        onTap: () async {
+          try {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LogDetail(logData: data, logId: docId),
+              ),
+            );
+            // If result is true, it means the log was deleted, so we don't need to do anything
+            // The stream will automatically update
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error opening log details: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -453,14 +529,7 @@ class _ViewLogsState extends State<ViewLogs> {
   // ──────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-        title: const Text('View Logs'),
-        leading: const BackButton(),
-      ),
-      body: Column(
+    return Column(
         children: [
           // ── Filter bar ──────────────────────────────────────────────────
           Container(
@@ -725,14 +794,84 @@ class _ViewLogsState extends State<ViewLogs> {
                   itemBuilder: (context, i) {
                     final doc = docs[i];
                     final data = doc.data();
-                    return _buildLogCard(data, _isCompactView, doc.id);
+                    final logTitle = data['summary'] ?? data['workType'] ?? 'Work Entry';
+                    
+                    return Dismissible(
+                      key: Key(doc.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.delete, color: Colors.white, size: 24),
+                            SizedBox(height: 4),
+                            Text('Delete', style: TextStyle(color: Colors.white, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      confirmDismiss: (direction) async {
+                        return await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Work Log'),
+                            content: Text(
+                              'Are you sure you want to delete "$logTitle"? This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('logs')
+                              .doc(doc.id)
+                              .delete();
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Work log deleted successfully!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error deleting work log: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: _buildLogCard(data, _isCompactView, doc.id),
+                    );
                   },
                 );
               },
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

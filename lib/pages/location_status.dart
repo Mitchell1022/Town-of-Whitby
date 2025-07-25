@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/database_service.dart';
+import '../widgets/global_navigation_wrapper.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
@@ -94,6 +95,14 @@ class _LocationStatusState extends State<LocationStatus> {
                   (loc['daysSinceLastWork'] as int) <= 60,
             )
             .length;
+    final moderateCount =
+        _locationData
+            .where(
+              (loc) =>
+                  (loc['daysSinceLastWork'] as int) > 7 &&
+                  (loc['daysSinceLastWork'] as int) <= 30,
+            )
+            .length;
     final activeCount =
         _locationData
             .where((loc) => (loc['daysSinceLastWork'] as int) <= 7)
@@ -149,16 +158,16 @@ class _LocationStatusState extends State<LocationStatus> {
               children: [
                 Expanded(
                   child: _buildStatItem(
-                    'Total Locations',
-                    totalLocations.toString(),
-                    _whitbyBlue,
+                    'Active (≤7 days)',
+                    activeCount.toString(),
+                    const Color(0xFF4CAF50),
                   ),
                 ),
                 Expanded(
                   child: _buildStatItem(
-                    'Active (≤7 days)',
-                    activeCount.toString(),
-                    const Color(0xFF4CAF50),
+                    'Moderate (8-30 days)',
+                    moderateCount.toString(),
+                    const Color(0xFFFF9800),
                   ),
                 ),
               ],
@@ -273,6 +282,178 @@ class _LocationStatusState extends State<LocationStatus> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildLocationTable() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.table_chart, color: _whitbyBlue, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Location Overview',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: _whitbyBlue,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 20,
+                headingRowColor: WidgetStateProperty.all(_whitbyBlue.withOpacity(0.1)),
+                columns: const [
+                  DataColumn(
+                    label: Text(
+                      'Location',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Status',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Days Since',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Last Work',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Recent Hours',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Total Entries',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: _whitbyBlue),
+                    ),
+                  ),
+                ],
+                rows: _filteredData.map<DataRow>((location) {
+                  final daysSince = location['daysSinceLastWork'] as int;
+                  final lastWorkDate = location['lastWorkDate'] as DateTime?;
+                  final lastWorkType = location['lastWorkType'] as String;
+                  final recentHours = location['recentHours'] as double;
+                  final totalEntries = location['totalWorkEntries'] as int;
+                  final status = location['status'] as String;
+                  final statusColor = location['statusColor'] as Color;
+
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              location['name'] as String,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: _whitbyBlue,
+                              ),
+                            ),
+                            if (location['address'].toString().isNotEmpty)
+                              Text(
+                                location['address'] as String,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: statusColor.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            status,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          '$daysSince days',
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (lastWorkDate != null)
+                              Text(
+                                _dateFormat.format(lastWorkDate),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            if (lastWorkType.isNotEmpty)
+                              Text(
+                                lastWorkType,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 11,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          '${recentHours.toStringAsFixed(1)}h',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          totalEntries.toString(),
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -497,64 +678,59 @@ class _LocationStatusState extends State<LocationStatus> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Location Status'),
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadLocationData,
-            tooltip: 'Refresh Data',
-          ),
-        ],
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _locationData.isEmpty
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.location_off, size: 64, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      'No location data available',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  ],
-                ),
-              )
-              : Column(
+    return PageWithBottomNav(
+      title: 'Location Status',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _loadLocationData,
+          tooltip: 'Refresh Data',
+        ),
+      ],
+      child: Container(
+        color: const Color(0xFFF8F9FA),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _locationData.isEmpty
+            ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildStatsCard(),
-                  const SizedBox(height: 8),
-                  _buildFilterChips(),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child:
-                        _filteredData.isEmpty
-                            ? Center(
-                              child: Text(
-                                'No locations match the selected filter',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 16,
-                                ),
-                              ),
-                            )
-                            : ListView.builder(
-                              itemCount: _filteredData.length,
-                              itemBuilder: (context, index) {
-                                return _buildLocationCard(_filteredData[index]);
-                              },
-                            ),
+                  Icon(Icons.location_off, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No location data available',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ],
               ),
+            )
+            : Column(
+              children: [
+                _buildStatsCard(),
+                const SizedBox(height: 8),
+                _buildFilterChips(),
+                const SizedBox(height: 16),
+                Expanded(
+                  child:
+                      _filteredData.isEmpty
+                          ? Center(
+                            child: Text(
+                              'No locations match the selected filter',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                          : SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: _buildLocationTable(),
+                          ),
+                ),
+              ],
+            ),
+      ),
     );
   }
 }

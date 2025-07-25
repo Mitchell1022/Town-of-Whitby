@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/database_service.dart';
+import '../widgets/global_navigation_wrapper.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 const _textColour = Colors.black87;
@@ -227,22 +228,19 @@ class _ReportsState extends State<Reports> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: _whitbyBlue,
-        foregroundColor: Colors.white,
-        title: const Text('Reports & Analytics'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: _pickDateRange,
-            tooltip: 'Filter by date range',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
+    return PageWithBottomNav(
+      title: 'Reports & Analytics',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.date_range),
+          onPressed: _pickDateRange,
+          tooltip: 'Filter by date range',
+        ),
+      ],
+      child: Container(
+        color: const Color(0xFFF8F9FA),
+        child: Column(
+          children: [
           // Date range indicator
           if (_dateRange != null)
             Container(
@@ -316,6 +314,7 @@ class _ReportsState extends State<Reports> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
