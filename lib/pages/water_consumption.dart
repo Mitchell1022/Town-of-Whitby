@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../widgets/global_navigation_wrapper.dart';
+import '../services/database_service.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
@@ -20,6 +21,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
   int _totalFills = 0;
   double _averagePerFill = 0;
   Map<String, double> _workerTotals = {};
+  Map<String, String> _workerNames = {}; // Map worker ID to worker name
   
   final DateFormat _dateFormat = DateFormat.yMMMd();
 
@@ -31,6 +33,13 @@ class _WaterConsumptionState extends State<WaterConsumption> {
 
   Future<void> _loadWaterConsumptionData() async {
     try {
+      // Load workers first to get their names
+      final workers = await DatabaseService.getWorkers();
+      final workerNameMap = <String, String>{};
+      for (final worker in workers) {
+        workerNameMap[worker['id']] = worker['name'] ?? 'Unknown Worker';
+      }
+
       final snapshot = await FirebaseFirestore.instance
           .collection('water_tank_fills')
           .orderBy('date', descending: true)
@@ -56,7 +65,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
             'date': timestamp,
             'litres': litres,
             'worker': worker,
-            ...data,
+            'createdAt': data['createdAt'],
           });
 
           total += litres;
@@ -76,6 +85,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
           _totalFills = fills.length;
           _averagePerFill = fills.isEmpty ? 0 : total / fills.length;
           _workerTotals = workerSums;
+          _workerNames = workerNameMap;
           _isLoading = false;
         });
       }
@@ -97,7 +107,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
@@ -120,35 +130,39 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                     color: color.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: color, size: 24),
+                  child: Icon(icon, color: color, size: 20),
                 ),
                 const Spacer(),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: _whitbyBlue,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: Colors.grey[600],
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -207,7 +221,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          entry.key,
+                          _workerNames[entry.key] ?? entry.key,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -335,7 +349,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${fill['litres'].toStringAsFixed(0)}L',
+                            '${(fill['litres'] as double).toStringAsFixed(0)}L',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -343,7 +357,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                             ),
                           ),
                           Text(
-                            _dateFormat.format(fill['date']),
+                            _dateFormat.format(fill['date'] as DateTime),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -353,7 +367,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                       ),
                     ),
                     Text(
-                      fill['worker'],
+                      _workerNames[fill['worker'] as String] ?? (fill['worker'] as String),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[700],
@@ -393,65 +407,6 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Section
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            _whitbyBlue.withOpacity(0.1),
-                            Colors.blue.withOpacity(0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _whitbyBlue.withOpacity(0.1)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: _whitbyBlue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.water_drop,
-                              color: _whitbyBlue,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Water Consumption Overview',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: _whitbyBlue,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Track and monitor water tank fills',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
                     // Statistics Cards
                     GridView.count(
                       shrinkWrap: true,
@@ -459,7 +414,7 @@ class _WaterConsumptionState extends State<WaterConsumption> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.3,
+                      childAspectRatio: 1.5,
                       children: [
                         _buildStatCard(
                           'Total Consumption',

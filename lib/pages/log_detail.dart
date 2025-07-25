@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/global_navigation_wrapper.dart';
+import '../services/database_service.dart';
+import 'edit_log.dart';
 
 const _whitbyBlue = Color(0xFF003366);
 
@@ -17,6 +19,63 @@ class LogDetail extends StatefulWidget {
 }
 
 class _LogDetailState extends State<LogDetail> {
+  Map<String, String> _workerNames = {};
+  bool _isLoadingWorkers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkerNames();
+  }
+
+  Future<void> _loadWorkerNames() async {
+    try {
+      final workers = await DatabaseService.getWorkers();
+      final workerNameMap = <String, String>{};
+      for (final worker in workers) {
+        workerNameMap[worker['id']] = worker['name'] ?? 'Unknown Worker';
+      }
+      
+      if (mounted) {
+        setState(() {
+          _workerNames = workerNameMap;
+          _isLoadingWorkers = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingWorkers = false);
+      }
+    }
+  }
+
+  Future<void> _editLog() async {
+    try {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditLog(
+            logData: widget.logData,
+            logId: widget.logId,
+          ),
+        ),
+      );
+      
+      // If result is true, the log was updated, so we should refresh or go back
+      if (result == true && mounted) {
+        Navigator.pop(context, true); // Return true to indicate the log was updated
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening edit page: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _deleteLog() async {
     final confirmed = await showDialog<bool>(
@@ -99,6 +158,11 @@ class _LogDetailState extends State<LogDetail> {
     return PageWithBottomNav(
       title: 'Work Log Details',
       actions: [
+        IconButton(
+          icon: const Icon(Icons.edit, color: Colors.white),
+          onPressed: _editLog,
+          tooltip: 'Edit Log',
+        ),
         IconButton(
           icon: const Icon(Icons.delete, color: Colors.white),
           onPressed: _deleteLog,
@@ -311,41 +375,45 @@ class _LogDetailState extends State<LogDetail> {
                         spacing: 8,
                         runSpacing: 8,
                         children:
-                            workers.map<Widget>((worker) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  // ignore: deprecated_member_use
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    // ignore: deprecated_member_use
-                                    color: Colors.green.withOpacity(0.3),
+                            _isLoadingWorkers 
+                              ? [const Center(child: CircularProgressIndicator())]
+                              : workers.map<Widget>((worker) {
+                                final workerId = worker.toString();
+                                final workerName = _workerNames[workerId] ?? workerId;
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.person,
-                                      size: 16,
-                                      color: Colors.green,
+                                  decoration: BoxDecoration(
+                                    // ignore: deprecated_member_use
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      // ignore: deprecated_member_use
+                                      color: Colors.green.withOpacity(0.3),
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      worker.toString(),
-                                      style: const TextStyle(
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.person,
+                                        size: 16,
                                         color: Colors.green,
-                                        fontWeight: FontWeight.w500,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        workerName,
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
                       ),
                     ],
                   ),
